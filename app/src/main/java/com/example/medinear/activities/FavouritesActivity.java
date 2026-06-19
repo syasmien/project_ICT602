@@ -41,13 +41,15 @@ public class FavouritesActivity extends AppCompatActivity {
         progressBar  = findViewById(R.id.progressBar);
         tvEmpty      = findViewById(R.id.tvEmpty);
 
-        getSupportActionBar().setTitle("Favourite Pharmacies");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle("Favourites");
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         adapter = new FavouriteAdapter(favouriteList,
-            this::navigateToPharmacy,
-            this::confirmDelete);
+                this::navigateToPharmacy,
+                this::confirmDelete);
         recyclerView.setAdapter(adapter);
 
         loadFavourites();
@@ -55,37 +57,48 @@ public class FavouritesActivity extends AppCompatActivity {
 
     private void loadFavourites() {
         progressBar.setVisibility(View.VISIBLE);
+        tvEmpty.setVisibility(View.GONE);
+
+        if (mAuth.getCurrentUser() == null) {
+            progressBar.setVisibility(View.GONE);
+            tvEmpty.setVisibility(View.VISIBLE);
+            return;
+        }
+
         String userId = mAuth.getCurrentUser().getUid();
 
         db.collection("favourites")
-            .whereEqualTo("userId", userId)
-            .get()
-            .addOnSuccessListener(querySnapshot -> {
-                progressBar.setVisibility(View.GONE);
-                favouriteList.clear();
-                for (QueryDocumentSnapshot doc : querySnapshot) {
-                    Favourite f = new Favourite(
-                        doc.getId(),
-                        doc.getString("pharmacyName"),
-                        doc.getString("address"),
-                        doc.getString("phone"),
-                        doc.getDouble("lat") != null ? doc.getDouble("lat") : 0.0,
-                        doc.getDouble("lng") != null ? doc.getDouble("lng") : 0.0
-                    );
-                    favouriteList.add(f);
-                }
-                adapter.notifyDataSetChanged();
-                tvEmpty.setVisibility(favouriteList.isEmpty() ? View.VISIBLE : View.GONE);
-            })
-            .addOnFailureListener(e -> {
-                progressBar.setVisibility(View.GONE);
-                Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-            });
+                .whereEqualTo("userId", userId)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    progressBar.setVisibility(View.GONE);
+                    favouriteList.clear();
+
+                    for (QueryDocumentSnapshot doc : querySnapshot) {
+                        Favourite f = new Favourite(
+                                doc.getId(),
+                                doc.getString("pharmacyName"),
+                                doc.getString("address"),
+                                doc.getString("phone"),
+                                doc.getDouble("lat") != null ? doc.getDouble("lat") : 0.0,
+                                doc.getDouble("lng") != null ? doc.getDouble("lng") : 0.0
+                        );
+                        favouriteList.add(f);
+                    }
+
+                    adapter.notifyDataSetChanged();
+                    tvEmpty.setVisibility(favouriteList.isEmpty() ? View.VISIBLE : View.GONE);
+                })
+                .addOnFailureListener(e -> {
+                    progressBar.setVisibility(View.GONE);
+                    Toast.makeText(this, "Error loading favourites: " + e.getMessage(),
+                            Toast.LENGTH_SHORT).show();
+                });
     }
 
     private void navigateToPharmacy(Favourite favourite) {
         Uri gmmIntentUri = Uri.parse(
-            "google.navigation:q=" + favourite.getLat() + "," + favourite.getLng() + "&mode=d");
+                "google.navigation:q=" + favourite.getLat() + "," + favourite.getLng() + "&mode=d");
         Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
         mapIntent.setPackage("com.google.android.apps.maps");
 
@@ -93,24 +106,27 @@ public class FavouritesActivity extends AppCompatActivity {
             startActivity(mapIntent);
         } else {
             Uri browserUri = Uri.parse(
-                "https://www.google.com/maps/dir/?api=1&destination="
-                + favourite.getLat() + "," + favourite.getLng());
+                    "https://www.google.com/maps/dir/?api=1&destination="
+                            + favourite.getLat() + "," + favourite.getLng());
             startActivity(new Intent(Intent.ACTION_VIEW, browserUri));
         }
     }
 
     private void confirmDelete(Favourite favourite) {
         new AlertDialog.Builder(this)
-            .setTitle("Remove Favourite")
-            .setMessage("Remove " + favourite.getPharmacyName() + " from favourites?")
-            .setPositiveButton("Remove", (dialog, which) ->
-                db.collection("favourites").document(favourite.getId()).delete()
-                    .addOnSuccessListener(unused -> {
-                        Toast.makeText(this, "Removed from favourites", Toast.LENGTH_SHORT).show();
-                        loadFavourites();
-                    }))
-            .setNegativeButton("Cancel", null)
-            .show();
+                .setTitle("Remove Favourite")
+                .setMessage("Remove " + favourite.getPharmacyName() + " from favourites?")
+                .setPositiveButton("Remove", (dialog, which) ->
+                        db.collection("favourites").document(favourite.getId()).delete()
+                                .addOnSuccessListener(unused -> {
+                                    Toast.makeText(this, "Removed from favourites", Toast.LENGTH_SHORT).show();
+                                    loadFavourites();
+                                })
+                                .addOnFailureListener(e ->
+                                        Toast.makeText(this, "Failed to remove: " + e.getMessage(),
+                                                Toast.LENGTH_SHORT).show()))
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     @Override

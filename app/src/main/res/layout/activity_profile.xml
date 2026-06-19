@@ -3,90 +3,150 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_register_gradient">
+    android:background="@drawable/bg_register_gradient"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="24dp">
+        android:orientation="vertical">
 
-        <!-- Header -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="My Profile"
-            android:textSize="30sp"
-            android:textStyle="bold"
-            android:textColor="@android:color/white"
-            android:layout_marginBottom="6dp"/>
+        <!-- ── HERO BANNER ── -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="#1A2C5364"
+            android:padding="24dp">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Manage your account information"
-            android:textColor="#DDDDDD"
-            android:layout_marginBottom="20dp"/>
+            <!-- Avatar Circle -->
+            <FrameLayout
+                android:layout_width="80dp"
+                android:layout_height="80dp">
 
-        <!-- Profile Card -->
+                <androidx.cardview.widget.CardView
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    app:cardCornerRadius="40dp"
+                    app:cardElevation="8dp"
+                    app:cardBackgroundColor="#2C5364">
+
+                    <TextView
+                        android:id="@+id/tvAvatar"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:text="?"
+                        android:textColor="@android:color/white"
+                        android:textSize="32sp"
+                        android:textStyle="bold" />
+
+                </androidx.cardview.widget.CardView>
+
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/tvDisplayName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Your Name"
+                android:textColor="@android:color/white"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_marginTop="12dp" />
+
+            <TextView
+                android:id="@+id/tvEmail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="user@email.com"
+                android:textColor="#AACCDD"
+                android:textSize="13sp"
+                android:layout_marginTop="4dp" />
+
+        </LinearLayout>
+
+        <!-- ── FORM CARD ── -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardCornerRadius="22dp"
-            app:cardElevation="12dp"
-            app:cardUseCompatPadding="true"
-            android:layout_marginTop="10dp"
-            android:background="@android:color/white">
+            android:layout_margin="20dp"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="16dp"
+            app:cardBackgroundColor="#FFFFFF">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="20dp">
+                android:padding="24dp">
 
-                <!-- Email (read only) -->
+                <!-- Section Label -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Email"
-                    android:textStyle="bold"
-                    android:textColor="#444444"/>
-
-                <TextView
-                    android:id="@+id/tvEmail"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="user@email.com"
-                    android:textSize="16sp"
+                    android:text="ACCOUNT DETAILS"
+                    android:textSize="11sp"
                     android:textColor="#2C5364"
-                    android:layout_marginTop="4dp"
-                    android:layout_marginBottom="16dp"/>
+                    android:textStyle="bold"
+                    android:letterSpacing="0.15"
+                    android:layout_marginBottom="20dp" />
 
-                <!-- Name -->
+                <!-- Name Field -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Full Name"
+                    android:textSize="12sp"
+                    android:textColor="#666666"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="6dp" />
+
                 <EditText
                     android:id="@+id/etName"
                     android:layout_width="match_parent"
-                    android:layout_height="50dp"
-                    android:hint="Full Name"
-                    android:textColor="@android:color/black"
-                    android:textColorHint="#888"
-                    android:drawableStart="@android:drawable/ic_menu_myplaces"
-                    android:drawablePadding="10dp"
-                    android:padding="12dp"
-                    android:background="@drawable/input_bg"/>
+                    android:layout_height="52dp"
+                    android:hint="Enter your full name"
+                    android:textColor="#111111"
+                    android:textColorHint="#BBBBBB"
+                    android:textSize="15sp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:background="@drawable/input_field_bg"
+                    android:inputType="textPersonName"
+                    android:layout_marginBottom="20dp" />
 
-                <!-- Phone -->
+                <!-- Phone Field -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Phone Number"
+                    android:textSize="12sp"
+                    android:textColor="#666666"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="6dp" />
+
                 <EditText
                     android:id="@+id/etPhone"
                     android:layout_width="match_parent"
-                    android:layout_height="50dp"
-                    android:hint="Phone Number"
+                    android:layout_height="52dp"
+                    android:hint="e.g. 012-3456789"
+                    android:textColor="#111111"
+                    android:textColorHint="#BBBBBB"
+                    android:textSize="15sp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:background="@drawable/input_field_bg"
                     android:inputType="phone"
-                    android:textColor="@android:color/black"
-                    android:textColorHint="#888"
-                    android:layout_marginTop="12dp"
-                    android:padding="12dp"
-                    android:background="@drawable/input_bg"/>
+                    android:layout_marginBottom="28dp" />
+
+                <!-- Divider -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#F0F0F0"
+                    android:layout_marginBottom="24dp" />
 
                 <!-- Progress -->
                 <ProgressBar
@@ -94,22 +154,46 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:layout_marginTop="16dp"
-                    android:visibility="gone"/>
+                    android:layout_marginBottom="12dp"
+                    android:visibility="gone" />
 
                 <!-- Save Button -->
                 <Button
                     android:id="@+id/btnSave"
                     android:layout_width="match_parent"
-                    android:layout_height="50dp"
+                    android:layout_height="52dp"
                     android:text="Save Changes"
                     android:textColor="@android:color/white"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
                     android:backgroundTint="#2C5364"
-                    android:layout_marginTop="16dp"/>
+                    app:cornerRadius="14dp" />
+
+                <!-- Logout Button -->
+                <Button
+                    android:id="@+id/btnLogout"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:text="Log Out"
+                    android:textColor="#CC3333"
+                    android:textSize="15sp"
+                    android:backgroundTint="#FFF0F0"
+                    app:cornerRadius="14dp"
+                    android:layout_marginTop="12dp" />
 
             </LinearLayout>
 
         </androidx.cardview.widget.CardView>
+
+        <!-- Version tag -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="MediNear v1.0"
+            android:textColor="#88FFFFFF"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:layout_marginBottom="24dp" />
 
     </LinearLayout>
 </ScrollView>

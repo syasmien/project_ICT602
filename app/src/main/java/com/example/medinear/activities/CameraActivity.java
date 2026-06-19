@@ -65,8 +65,10 @@ public class CameraActivity extends AppCompatActivity {
         progressBar     = findViewById(R.id.progressBar);
         tvStatus        = findViewById(R.id.tvStatus);
 
-        getSupportActionBar().setTitle("Capture Medicine");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle("Capture Medicine");
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
 
         // Initially hide retake and save
         btnRetake.setVisibility(View.GONE);

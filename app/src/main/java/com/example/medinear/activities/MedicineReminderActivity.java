@@ -49,8 +49,10 @@ public class MedicineReminderActivity extends AppCompatActivity {
         progressBar    = findViewById(R.id.progressBar);
         tvEmpty        = findViewById(R.id.tvEmpty);
 
-        getSupportActionBar().setTitle("Medicine Reminders");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle("Medicine Reminder");
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         adapter = new ReminderAdapter(reminderList, this::deleteReminder);
