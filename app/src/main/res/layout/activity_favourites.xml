@@ -4,53 +4,109 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@drawable/bg_register_gradient"
+    android:background="@color/background_light"
     android:padding="16dp">
 
-    <!-- Header -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="⭐ Favourite Pharmacies"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="@android:color/white"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Your saved locations"
-        android:textColor="#DDDDDD"
-        android:layout_marginBottom="12dp"/>
-
-    <!-- Progress -->
-    <ProgressBar
-        android:id="@+id/progressBar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginTop="20dp"
-        android:visibility="gone"/>
-
-    <!-- Empty State -->
-    <TextView
-        android:id="@+id/tvEmpty"
+    <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="No favourites yet ⭐"
-        android:textColor="@android:color/white"
-        android:gravity="center"
-        android:layout_marginTop="30dp"
-        android:textSize="16sp"
-        android:visibility="gone"/>
+        android:layout_marginBottom="16dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp">
 
-    <!-- RecyclerView -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="⭐ Favourites"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/primary_color" />
+
+            <TextView
+                android:id="@+id/tvCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0 items"
+                android:textSize="14sp"
+                android:textColor="@android:color/darker_gray"
+                android:layout_marginEnd="12dp" />
+
+            <Button
+                android:id="@+id/btnClearAll"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Clear"
+                android:backgroundTint="@color/red"
+                android:textColor="@android:color/white"
+                android:minWidth="60dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="10dp"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:clipToPadding="false"
-        android:paddingBottom="20dp"/>
+        android:paddingBottom="8dp" />
+
+    <LinearLayout
+        android:id="@+id/emptyState"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@drawable/ic_launcher_foreground"
+            android:contentDescription="Empty"
+            android:alpha="0.5" />
+
+        <TextView
+            android:id="@+id/tvEmpty"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No Favourites"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/darker_gray"
+            android:layout_marginTop="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Capture and save medicines\nto see them here"
+            android:textSize="14sp"
+            android:textColor="@android:color/darker_gray"
+            android:gravity="center"
+            android:layout_marginTop="8dp" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Take a Photo"
+            android:backgroundTint="@color/primary_color"
+            android:textColor="@android:color/white"
+            android:layout_marginTop="24dp"
+            android:onClick="goToCamera" />
+
+    </LinearLayout>
 
 </LinearLayout>

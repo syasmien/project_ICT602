@@ -1,199 +1,109 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_register_gradient"
-    android:fillViewport="true">
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@color/background_light">
 
-    <LinearLayout
+    <!-- Back Button -->
+    <Button
+        android:id="@+id/btnBack"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="← Back"
+        android:backgroundTint="@android:color/transparent"
+        android:textColor="@color/primary_color"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Profile Header -->
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        app:cardCornerRadius="16dp"
+        app:cardElevation="4dp"
+        android:padding="24dp"
+        android:layout_marginBottom="16dp">
 
-        <!-- ── HERO BANNER ── -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="200dp"
+            android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:gravity="center"
-            android:background="#1A2C5364"
-            android:padding="24dp">
+            android:gravity="center">
 
-            <!-- Avatar Circle -->
-            <FrameLayout
+            <ImageView
                 android:layout_width="80dp"
-                android:layout_height="80dp">
-
-                <androidx.cardview.widget.CardView
-                    android:layout_width="80dp"
-                    android:layout_height="80dp"
-                    app:cardCornerRadius="40dp"
-                    app:cardElevation="8dp"
-                    app:cardBackgroundColor="#2C5364">
-
-                    <TextView
-                        android:id="@+id/tvAvatar"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:gravity="center"
-                        android:text="?"
-                        android:textColor="@android:color/white"
-                        android:textSize="32sp"
-                        android:textStyle="bold" />
-
-                </androidx.cardview.widget.CardView>
-
-            </FrameLayout>
+                android:layout_height="80dp"
+                android:src="@drawable/ic_launcher_foreground"
+                android:contentDescription="Profile Picture"
+                android:background="@drawable/circle_background" />
 
             <TextView
-                android:id="@+id/tvDisplayName"
+                android:id="@+id/tvUserName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Your Name"
-                android:textColor="@android:color/white"
-                android:textSize="20sp"
+                android:text="Name: User"
+                android:textSize="18sp"
                 android:textStyle="bold"
                 android:layout_marginTop="12dp" />
 
             <TextView
-                android:id="@+id/tvEmail"
+                android:id="@+id/tvUserEmail"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="user@email.com"
-                android:textColor="#AACCDD"
-                android:textSize="13sp"
-                android:layout_marginTop="4dp" />
+                android:text="Email: user@example.com"
+                android:textSize="14sp"
+                android:textColor="@android:color/darker_gray" />
 
         </LinearLayout>
 
-        <!-- ── FORM CARD ── -->
-        <androidx.cardview.widget.CardView
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Settings Options -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="2dp">
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="20dp"
-            app:cardCornerRadius="24dp"
-            app:cardElevation="16dp"
-            app:cardBackgroundColor="#FFFFFF">
+            android:orientation="vertical">
 
-            <LinearLayout
+            <Button
+                android:id="@+id/btnEditProfile"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="24dp">
+                android:layout_height="56dp"
+                android:text="✏️ Edit Profile"
+                android:backgroundTint="@android:color/transparent"
+                android:textColor="@android:color/black"
+                android:textSize="16sp"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:gravity="start|center_vertical"
+                android:paddingStart="16dp" />
 
-                <!-- Section Label -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="ACCOUNT DETAILS"
-                    android:textSize="11sp"
-                    android:textColor="#2C5364"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.15"
-                    android:layout_marginBottom="20dp" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/darker_gray" />
 
-                <!-- Name Field -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Full Name"
-                    android:textSize="12sp"
-                    android:textColor="#666666"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="6dp" />
+            <Button
+                android:id="@+id/btnChangePassword"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="🔒 Change Password"
+                android:backgroundTint="@android:color/transparent"
+                android:textColor="@android:color/black"
+                android:textSize="16sp"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:gravity="start|center_vertical"
+                android:paddingStart="16dp" />
 
-                <EditText
-                    android:id="@+id/etName"
-                    android:layout_width="match_parent"
-                    android:layout_height="52dp"
-                    android:hint="Enter your full name"
-                    android:textColor="#111111"
-                    android:textColorHint="#BBBBBB"
-                    android:textSize="15sp"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    android:background="@drawable/input_field_bg"
-                    android:inputType="textPersonName"
-                    android:layout_marginBottom="20dp" />
+        </LinearLayout>
 
-                <!-- Phone Field -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Phone Number"
-                    android:textSize="12sp"
-                    android:textColor="#666666"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="6dp" />
+    </com.google.android.material.card.MaterialCardView>
 
-                <EditText
-                    android:id="@+id/etPhone"
-                    android:layout_width="match_parent"
-                    android:layout_height="52dp"
-                    android:hint="e.g. 012-3456789"
-                    android:textColor="#111111"
-                    android:textColorHint="#BBBBBB"
-                    android:textSize="15sp"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    android:background="@drawable/input_field_bg"
-                    android:inputType="phone"
-                    android:layout_marginBottom="28dp" />
-
-                <!-- Divider -->
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="#F0F0F0"
-                    android:layout_marginBottom="24dp" />
-
-                <!-- Progress -->
-                <ProgressBar
-                    android:id="@+id/progressBar"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:layout_marginBottom="12dp"
-                    android:visibility="gone" />
-
-                <!-- Save Button -->
-                <Button
-                    android:id="@+id/btnSave"
-                    android:layout_width="match_parent"
-                    android:layout_height="52dp"
-                    android:text="Save Changes"
-                    android:textColor="@android:color/white"
-                    android:textSize="15sp"
-                    android:textStyle="bold"
-                    android:backgroundTint="#2C5364"
-                    app:cornerRadius="14dp" />
-
-                <!-- Logout Button -->
-                <Button
-                    android:id="@+id/btnLogout"
-                    android:layout_width="match_parent"
-                    android:layout_height="52dp"
-                    android:text="Log Out"
-                    android:textColor="#CC3333"
-                    android:textSize="15sp"
-                    android:backgroundTint="#FFF0F0"
-                    app:cornerRadius="14dp"
-                    android:layout_marginTop="12dp" />
-
-            </LinearLayout>
-
-        </androidx.cardview.widget.CardView>
-
-        <!-- Version tag -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="MediNear v1.0"
-            android:textColor="#88FFFFFF"
-            android:textSize="12sp"
-            android:gravity="center"
-            android:layout_marginBottom="24dp" />
-
-    </LinearLayout>
-</ScrollView>
+</LinearLayout>

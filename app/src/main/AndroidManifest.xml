@@ -4,25 +4,22 @@
 
     <!-- ================= PERMISSIONS ================= -->
     <uses-permission android:name="android.permission.INTERNET" />
-
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-
     <uses-permission android:name="android.permission.CAMERA" />
-
-    <!-- Android 13+ Notifications -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-
-    <!-- Storage (Android 12 and below only) -->
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <!-- ================= FEATURES ================= -->
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
-
     <uses-feature
         android:name="android.hardware.location.gps"
         android:required="true" />
@@ -33,9 +30,11 @@
         android:label="MediNear"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.MediNear">
+        android:theme="@style/Theme.MediNear"
+        android:requestLegacyExternalStorage="true"
+        android:usesCleartextTraffic="true">
 
-        <!-- Google Maps API -->
+        <!-- Google Maps API Key -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyDr64tr-Y3YopYDi7PmbUou96Q0o3wSYlI" />
@@ -44,54 +43,68 @@
         <activity
             android:name=".activities.SplashActivity"
             android:exported="true"
-            android:screenOrientation="portrait">
-
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.MediNear">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
         </activity>
 
         <!-- ================= AUTH ================= -->
         <activity
             android:name=".activities.LoginActivity"
-            android:exported="false" />
-
+            android:exported="false"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".activities.RegisterActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:screenOrientation="portrait" />
 
-        <!-- ================= MAIN ================= -->
+        <!-- ================= MAIN ACTIVITIES ================= -->
         <activity
             android:name=".activities.HomeActivity"
-            android:exported="false" />
-
+            android:exported="false"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".activities.NearbyPharmacyActivity"
-            android:exported="false" />
-
+            android:exported="false"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".activities.PharmacyDetailActivity"
-            android:exported="false" />
-
+            android:exported="false"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".activities.CameraActivity"
-            android:exported="false" />
-
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activities.GalleryActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activities.ImageViewActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".activities.FavouritesActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:screenOrientation="portrait" />
 
+        <!-- ================= MEDICINE REMINDER ================= -->
         <activity
             android:name=".activities.MedicineReminderActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:parentActivityName=".activities.HomeActivity" />
 
         <activity
             android:name=".activities.ProfileActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:screenOrientation="portrait" />
 
-        <!-- ================= FIREBASE MESSAGING ================= -->
+        <!-- ================= FIREBASE MESSAGING SERVICE ================= -->
+        <!-- ✅ Only ONE service entry needed -->
         <service
             android:name=".utils.MyFirebaseMessagingService"
             android:exported="false">
@@ -99,6 +112,17 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+
+        <!-- ================= FILE PROVIDER ================= -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
     </application>
 

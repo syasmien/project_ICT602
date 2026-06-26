@@ -1,134 +1,85 @@
 package com.example.medinear.activities;
 
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.*;
-import androidx.appcompat.app.AlertDialog;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.medinear.R;
 import com.example.medinear.adapters.FavouriteAdapter;
-import com.example.medinear.models.Favourite;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.example.medinear.models.Medicine;
+import com.example.medinear.utils.LocalStorageHelper;
 import java.util.ArrayList;
 import java.util.List;
 
 public class FavouritesActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
-    private ProgressBar progressBar;
-    private TextView tvEmpty;
-    private FavouriteAdapter adapter;
-    private List<Favourite> favouriteList = new ArrayList<>();
+    private TextView tvEmpty, tvCount;
+    private Button btnClearAll;
+    private View emptyState;
 
-    private FirebaseAuth mAuth;
-    private FirebaseFirestore db;
+    private LocalStorageHelper storageHelper;
+    private FavouriteAdapter adapter;
+    private List<Medicine> favouriteList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_favourites);
 
-        mAuth = FirebaseAuth.getInstance();
-        db    = FirebaseFirestore.getInstance();
+        storageHelper = new LocalStorageHelper(this);
 
+        initViews();
+        loadFavourites();
+
+        btnClearAll.setOnClickListener(v -> {
+            storageHelper.clearAllData();
+            loadFavourites();
+            Toast.makeText(this, "All favourites cleared", Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private void initViews() {
         recyclerView = findViewById(R.id.recyclerView);
-        progressBar  = findViewById(R.id.progressBar);
-        tvEmpty      = findViewById(R.id.tvEmpty);
-
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle("Favourites");
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        }
+        tvEmpty = findViewById(R.id.tvEmpty);
+        tvCount = findViewById(R.id.tvCount);
+        btnClearAll = findViewById(R.id.btnClearAll);
+        emptyState = findViewById(R.id.emptyState);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new FavouriteAdapter(favouriteList,
-                this::navigateToPharmacy,
-                this::confirmDelete);
+        adapter = new FavouriteAdapter(favouriteList);
         recyclerView.setAdapter(adapter);
-
-        loadFavourites();
     }
 
     private void loadFavourites() {
-        progressBar.setVisibility(View.VISIBLE);
-        tvEmpty.setVisibility(View.GONE);
+        favouriteList.clear();
+        favouriteList.addAll(storageHelper.getMedicines());
+        adapter.notifyDataSetChanged();
 
-        if (mAuth.getCurrentUser() == null) {
-            progressBar.setVisibility(View.GONE);
-            tvEmpty.setVisibility(View.VISIBLE);
-            return;
-        }
+        boolean isEmpty = favouriteList.isEmpty();
 
-        String userId = mAuth.getCurrentUser().getUid();
+        recyclerView.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
+        emptyState.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
+        btnClearAll.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
 
-        db.collection("favourites")
-                .whereEqualTo("userId", userId)
-                .get()
-                .addOnSuccessListener(querySnapshot -> {
-                    progressBar.setVisibility(View.GONE);
-                    favouriteList.clear();
-
-                    for (QueryDocumentSnapshot doc : querySnapshot) {
-                        Favourite f = new Favourite(
-                                doc.getId(),
-                                doc.getString("pharmacyName"),
-                                doc.getString("address"),
-                                doc.getString("phone"),
-                                doc.getDouble("lat") != null ? doc.getDouble("lat") : 0.0,
-                                doc.getDouble("lng") != null ? doc.getDouble("lng") : 0.0
-                        );
-                        favouriteList.add(f);
-                    }
-
-                    adapter.notifyDataSetChanged();
-                    tvEmpty.setVisibility(favouriteList.isEmpty() ? View.VISIBLE : View.GONE);
-                })
-                .addOnFailureListener(e -> {
-                    progressBar.setVisibility(View.GONE);
-                    Toast.makeText(this, "Error loading favourites: " + e.getMessage(),
-                            Toast.LENGTH_SHORT).show();
-                });
-    }
-
-    private void navigateToPharmacy(Favourite favourite) {
-        Uri gmmIntentUri = Uri.parse(
-                "google.navigation:q=" + favourite.getLat() + "," + favourite.getLng() + "&mode=d");
-        Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
-        mapIntent.setPackage("com.google.android.apps.maps");
-
-        if (mapIntent.resolveActivity(getPackageManager()) != null) {
-            startActivity(mapIntent);
-        } else {
-            Uri browserUri = Uri.parse(
-                    "https://www.google.com/maps/dir/?api=1&destination="
-                            + favourite.getLat() + "," + favourite.getLng());
-            startActivity(new Intent(Intent.ACTION_VIEW, browserUri));
+        if (tvCount != null) {
+            tvCount.setText(favouriteList.size() + " items");
         }
     }
 
-    private void confirmDelete(Favourite favourite) {
-        new AlertDialog.Builder(this)
-                .setTitle("Remove Favourite")
-                .setMessage("Remove " + favourite.getPharmacyName() + " from favourites?")
-                .setPositiveButton("Remove", (dialog, which) ->
-                        db.collection("favourites").document(favourite.getId()).delete()
-                                .addOnSuccessListener(unused -> {
-                                    Toast.makeText(this, "Removed from favourites", Toast.LENGTH_SHORT).show();
-                                    loadFavourites();
-                                })
-                                .addOnFailureListener(e ->
-                                        Toast.makeText(this, "Failed to remove: " + e.getMessage(),
-                                                Toast.LENGTH_SHORT).show()))
-                .setNegativeButton("Cancel", null)
-                .show();
+    public void goToCamera(View view) {
+        Intent intent = new Intent(this, CameraActivity.class);
+        startActivity(intent);
     }
 
     @Override
-    public boolean onSupportNavigateUp() { finish(); return true; }
+    protected void onResume() {
+        super.onResume();
+        loadFavourites();
+    }
 }

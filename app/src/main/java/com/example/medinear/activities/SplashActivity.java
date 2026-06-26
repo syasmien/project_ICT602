@@ -1,80 +1,63 @@
 package com.example.medinear.activities;
 
-import android.animation.AnimatorSet;
-import android.animation.ObjectAnimator;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
-import android.view.View;
-import android.view.animation.DecelerateInterpolator;
-import android.widget.ImageView;
-
+import android.util.Log;
 import androidx.appcompat.app.AppCompatActivity;
-
 import com.example.medinear.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 public class SplashActivity extends AppCompatActivity {
 
-    private static final int SPLASH_TIME = 3000;
-    private ImageView logo;
-
-    private final Handler handler = new Handler(Looper.getMainLooper());
-    private boolean isActive = true;
+    private FirebaseAuth mAuth;
+    private static final String TAG = "SplashActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
 
-        logo = findViewById(R.id.logo);
+        mAuth = FirebaseAuth.getInstance();
 
-        playAnimation();
+        // Delay to show splash screen
+        new Handler().postDelayed(() -> {
+            FirebaseUser currentUser = mAuth.getCurrentUser();
 
-        handler.postDelayed(this::goNext, SPLASH_TIME);
+            if (currentUser != null) {
+                // User is logged in
+                startActivity(new Intent(SplashActivity.this, HomeActivity.class));
+            } else {
+                // User is not logged in
+                startActivity(new Intent(SplashActivity.this, LoginActivity.class));
+            }
+            finish();
+        }, 2000);
+
+        // Get FCM token (only if you have FCM enabled)
+        getFCMToken();
     }
 
-    private void goNext() {
-
-        if (!isActive) return;
-
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-
-        Intent intent;
-
-        if (currentUser != null) {
-            intent = new Intent(SplashActivity.this, HomeActivity.class);
-        } else {
-            intent = new Intent(SplashActivity.this, LoginActivity.class);
+    private void getFCMToken() {
+        try {
+            FirebaseMessaging.getInstance().getToken()
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            String token = task.getResult();
+                            Log.d(TAG, "FCM Token: " + token);
+                            // Save token to SharedPreferences or send to server
+                            getSharedPreferences("FCM", MODE_PRIVATE)
+                                    .edit()
+                                    .putString("fcm_token", token)
+                                    .apply();
+                        } else {
+                            Log.e(TAG, "Failed to get FCM token", task.getException());
+                        }
+                    });
+        } catch (Exception e) {
+            Log.e(TAG, "FCM not available", e);
         }
-
-        startActivity(intent);
-        finish();
-    }
-
-    private void playAnimation() {
-
-        ObjectAnimator fadeIn = ObjectAnimator.ofFloat(logo, View.ALPHA, 0f, 1f);
-        fadeIn.setDuration(1200);
-
-        ObjectAnimator scaleX = ObjectAnimator.ofFloat(logo, View.SCALE_X, 0.6f, 1f);
-        ObjectAnimator scaleY = ObjectAnimator.ofFloat(logo, View.SCALE_Y, 0.6f, 1f);
-
-        scaleX.setDuration(1200);
-        scaleY.setDuration(1200);
-
-        AnimatorSet set = new AnimatorSet();
-        set.playTogether(fadeIn, scaleX, scaleY);
-        set.setInterpolator(new DecelerateInterpolator());
-        set.start();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        isActive = false;
-        handler.removeCallbacksAndMessages(null);
     }
 }
