@@ -19,6 +19,7 @@ import com.android.volley.toolbox.Volley;
 import com.example.medinear.R;
 import com.example.medinear.adapters.PharmacyAdapter;
 import com.example.medinear.models.Pharmacy;
+import com.example.medinear.utils.LocalStorageHelper;
 import com.example.medinear.utils.NotificationHelper;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -51,6 +52,7 @@ public class NearbyPharmacyActivity extends AppCompatActivity implements OnMapRe
     private final List<Pharmacy> pharmacyList = new ArrayList<>();
     private Location currentLocation;
     private RequestQueue requestQueue;
+    private LocalStorageHelper storageHelper; // NEW
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,12 +60,21 @@ public class NearbyPharmacyActivity extends AppCompatActivity implements OnMapRe
         setContentView(R.layout.activity_nearby_pharmacy);
 
         requestQueue = Volley.newRequestQueue(this);
+        storageHelper = new LocalStorageHelper(this); // NEW
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new PharmacyAdapter(pharmacyList);
+        adapter = new PharmacyAdapter(pharmacyList, PharmacyAdapter.Mode.NEARBY); // CHANGED
+
+        adapter.setOnAddFavouriteClickListener(pharmacy -> { // CHANGED - was setOnFavouriteClickListener
+            storageHelper.addFavouritePharmacy(pharmacy);
+            Toast.makeText(this, pharmacy.getName() + " added to favourites", Toast.LENGTH_SHORT).show();
+        });
+
+        recyclerView.setAdapter(adapter);
+
         recyclerView.setAdapter(adapter);
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -199,6 +210,7 @@ public class NearbyPharmacyActivity extends AppCompatActivity implements OnMapRe
                 double lng = locationObj.optDouble("lng", 0);
 
                 Pharmacy pharmacy = new Pharmacy();
+                pharmacy.setId(obj.optString("place_id", null)); // FIXED - was never set before, needed for favouriting
                 pharmacy.setName(obj.optString("name", "Unknown Pharmacy"));
                 pharmacy.setAddress(obj.optString("vicinity", ""));
                 pharmacy.setLatitude(lat);
@@ -216,6 +228,9 @@ public class NearbyPharmacyActivity extends AppCompatActivity implements OnMapRe
                             lat, lng, distResult);
                     pharmacy.setDistance(distResult[0] / 1000f); // meters to km
                 }
+
+                // NEW - reflect saved favourite state as soon as the list loads
+                pharmacy.setFavourite(storageHelper.isFavouritePharmacy(pharmacy.getId()));
 
                 pharmacyList.add(pharmacy);
 

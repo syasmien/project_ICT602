@@ -16,9 +16,10 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
+            <!-- Left Side -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -30,33 +31,34 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Pharmacy Name"
+                    android:textColor="@android:color/black"
                     android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="@android:color/black" />
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/tvPharmacyAddress"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Address"
-                    android:textSize="14sp"
-                    android:textColor="@android:color/darker_gray" />
+                    android:textColor="@android:color/darker_gray"
+                    android:textSize="14sp" />
 
                 <TextView
                     android:id="@+id/tvPharmacyDistance"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Distance"
-                    android:textSize="12sp"
-                    android:textColor="@android:color/darker_gray" />
+                    android:textColor="@android:color/darker_gray"
+                    android:textSize="12sp" />
 
             </LinearLayout>
 
+            <!-- Right Side -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:gravity="end">
+                android:gravity="center_horizontal"
+                android:orientation="vertical">
 
                 <TextView
                     android:id="@+id/tvPharmacyStatus"
@@ -70,10 +72,36 @@
                     android:id="@+id/ratingBar"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:numStars="5"
-                    android:stepSize="0.5"
-                    android:rating="4.0"
                     android:isIndicator="true"
+                    android:numStars="5"
+                    android:rating="4.0"
+                    android:stepSize="0.5"
+                    android:visibility="gone" />
+
+                <Button
+                    android:id="@+id/btnFavouriteAction"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Add to My Favourite"
+                    android:textAllCaps="false"
+                    android:textSize="12sp"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:backgroundTint="@color/primary_color"
+                    android:textColor="@android:color/white" />
+
+                <ImageButton
+                    android:id="@+id/btnDeletePharmacy"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginTop="4dp"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="Delete pharmacy"
+                    android:padding="2dp"
                     android:visibility="gone" />
 
             </LinearLayout>

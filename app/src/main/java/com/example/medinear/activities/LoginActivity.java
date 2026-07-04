@@ -9,8 +9,9 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-import androidx.annotation.NonNull;
+
 import androidx.appcompat.app.AppCompatActivity;
+
 import com.example.medinear.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -54,16 +55,52 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void setupListeners() {
+
+        // Login Button
         btnLogin.setOnClickListener(v -> loginUser());
-        tvRegister.setOnClickListener(v -> {
-            startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
-        });
+
+        // Register
+        tvRegister.setOnClickListener(v ->
+                startActivity(new Intent(LoginActivity.this, RegisterActivity.class))
+        );
+
+        // Forgot Password
         tvForgotPassword.setOnClickListener(v -> {
-            Toast.makeText(this, "Please contact support", Toast.LENGTH_SHORT).show();
+
+            String email = etEmail.getText().toString().trim();
+
+            if (email.isEmpty()) {
+                etEmail.setError("Please enter your email first");
+                etEmail.requestFocus();
+                return;
+            }
+
+            progressBar.setVisibility(View.VISIBLE);
+
+            mAuth.sendPasswordResetEmail(email)
+                    .addOnCompleteListener(task -> {
+
+                        progressBar.setVisibility(View.GONE);
+
+                        if (task.isSuccessful()) {
+                            Toast.makeText(LoginActivity.this,
+                                    "Password reset email has been sent. Please check your email.",
+                                    Toast.LENGTH_LONG).show();
+                        } else {
+                            String message = task.getException() != null
+                                    ? task.getException().getMessage()
+                                    : "Failed to send password reset email.";
+
+                            Toast.makeText(LoginActivity.this,
+                                    message,
+                                    Toast.LENGTH_LONG).show();
+                        }
+                    });
         });
     }
 
     private void loginUser() {
+
         String email = etEmail.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
 
@@ -84,28 +121,42 @@ public class LoginActivity extends AppCompatActivity {
 
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
+
                     progressBar.setVisibility(View.GONE);
                     btnLogin.setEnabled(true);
 
                     if (task.isSuccessful()) {
+
                         FirebaseUser user = mAuth.getCurrentUser();
 
-                        // Save user info locally
                         SharedPreferences.Editor editor = prefs.edit();
                         editor.putBoolean("is_logged_in", true);
                         editor.putString("user_email", email);
+
                         if (user != null && user.getDisplayName() != null) {
                             editor.putString("user_name", user.getDisplayName());
                         } else {
-                            editor.putString("user_name", email.substring(0, email.indexOf("@")));
+                            editor.putString("user_name",
+                                    email.substring(0, email.indexOf("@")));
                         }
+
                         editor.apply();
 
-                        Toast.makeText(LoginActivity.this, "Login successful!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(LoginActivity.this,
+                                "Login successful!",
+                                Toast.LENGTH_SHORT).show();
+
                         startActivity(new Intent(LoginActivity.this, HomeActivity.class));
                         finish();
+
                     } else {
-                        Toast.makeText(LoginActivity.this, "Authentication failed: " + task.getException().getMessage(),
+
+                        String message = task.getException() != null
+                                ? task.getException().getMessage()
+                                : "Authentication failed.";
+
+                        Toast.makeText(LoginActivity.this,
+                                message,
                                 Toast.LENGTH_LONG).show();
                     }
                 });

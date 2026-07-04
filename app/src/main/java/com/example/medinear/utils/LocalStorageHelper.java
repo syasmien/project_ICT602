@@ -8,6 +8,7 @@ import android.os.Environment;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.example.medinear.models.Medicine;
+import com.example.medinear.models.Pharmacy;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -25,6 +26,7 @@ public class LocalStorageHelper {
     private Gson gson;
     private static final String PREF_NAME = "MediNearData";
     private static final String KEY_MEDICINES = "medicines";
+    private static final String KEY_PHARMACIES = "favourite_pharmacies"; // NEW
 
     public LocalStorageHelper(Context context) {
         this.context = context;
@@ -91,7 +93,7 @@ public class LocalStorageHelper {
         return paths;
     }
 
-    // ============ DATA METHODS ============
+    // ============ MEDICINE METHODS ============
 
     public void saveMedicines(List<Medicine> medicines) {
         String json = gson.toJson(medicines);
@@ -127,6 +129,66 @@ public class LocalStorageHelper {
         List<Medicine> medicines = getMedicines();
         medicines.removeIf(m -> m.getName().equalsIgnoreCase(name));
         saveMedicines(medicines);
+    }
+
+    // ============ PHARMACY FAVOURITE METHODS (NEW) ============
+
+    public void saveFavouritePharmacies(List<Pharmacy> pharmacies) {
+        String json = gson.toJson(pharmacies);
+        prefs.edit().putString(KEY_PHARMACIES, json).apply();
+    }
+
+    public void clearFavouritePharmacies() {
+        prefs.edit().remove(KEY_PHARMACIES).apply();
+    }
+
+    public List<Pharmacy> getFavouritePharmacies() {
+        String json = prefs.getString(KEY_PHARMACIES, "");
+        if (json.isEmpty()) {
+            return new ArrayList<>();
+        }
+        Type type = new TypeToken<List<Pharmacy>>(){}.getType();
+        List<Pharmacy> pharmacies = gson.fromJson(json, type);
+        return pharmacies != null ? pharmacies : new ArrayList<>();
+    }
+
+    public boolean isFavouritePharmacy(String pharmacyId) {
+        if (pharmacyId == null) return false;
+        for (Pharmacy p : getFavouritePharmacies()) {
+            if (pharmacyId.equals(p.getId())) return true;
+        }
+        return false;
+    }
+
+    public void addFavouritePharmacy(Pharmacy pharmacy) {
+        List<Pharmacy> pharmacies = getFavouritePharmacies();
+        for (Pharmacy p : pharmacies) {
+            if (p.getId() != null && p.getId().equals(pharmacy.getId())) {
+                return; // already saved, avoid duplicates
+            }
+        }
+        pharmacies.add(pharmacy);
+        saveFavouritePharmacies(pharmacies);
+    }
+
+    public void removeFavouritePharmacy(String pharmacyId) {
+        List<Pharmacy> pharmacies = getFavouritePharmacies();
+        pharmacies.removeIf(p -> pharmacyId != null && pharmacyId.equals(p.getId()));
+        saveFavouritePharmacies(pharmacies);
+    }
+
+    /**
+     * Toggles favourite state for a pharmacy. Returns the new state
+     * (true = now favourited, false = now removed).
+     */
+    public boolean toggleFavouritePharmacy(Pharmacy pharmacy) {
+        if (isFavouritePharmacy(pharmacy.getId())) {
+            removeFavouritePharmacy(pharmacy.getId());
+            return false;
+        } else {
+            addFavouritePharmacy(pharmacy);
+            return true;
+        }
     }
 
     public void clearAllData() {

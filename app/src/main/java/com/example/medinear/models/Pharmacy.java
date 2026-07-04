@@ -12,6 +12,7 @@ public class Pharmacy {
     private boolean openNow;
     private String openingHours;
     private String imageUrl;
+    private boolean isFavourite; // NEW - drives the star icon, not stored inside the pharmacy JSON itself
 
     public Pharmacy() {
         // Default constructor
@@ -64,4 +65,7 @@ public class Pharmacy {
 
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+
+    public boolean isFavourite() { return isFavourite; }
+    public void setFavourite(boolean favourite) { isFavourite = favourite; }
 }

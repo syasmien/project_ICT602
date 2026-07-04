@@ -10,22 +10,22 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.medinear.R;
-import com.example.medinear.adapters.FavouriteAdapter;
-import com.example.medinear.models.Medicine;
+import com.example.medinear.adapters.PharmacyAdapter;
+import com.example.medinear.models.Pharmacy;
 import com.example.medinear.utils.LocalStorageHelper;
 import java.util.ArrayList;
 import java.util.List;
 
 public class FavouritesActivity extends AppCompatActivity {
 
-    private RecyclerView recyclerView;
+    private RecyclerView recyclerViewPharmacies;
     private TextView tvEmpty, tvCount;
     private Button btnClearAll;
     private View emptyState;
 
     private LocalStorageHelper storageHelper;
-    private FavouriteAdapter adapter;
-    private List<Medicine> favouriteList = new ArrayList<>();
+    private PharmacyAdapter pharmacyAdapter;
+    private List<Pharmacy> favouritePharmacyList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,42 +38,47 @@ public class FavouritesActivity extends AppCompatActivity {
         loadFavourites();
 
         btnClearAll.setOnClickListener(v -> {
-            storageHelper.clearAllData();
+            storageHelper.clearFavouritePharmacies();
             loadFavourites();
             Toast.makeText(this, "All favourites cleared", Toast.LENGTH_SHORT).show();
         });
     }
 
     private void initViews() {
-        recyclerView = findViewById(R.id.recyclerView);
+        recyclerViewPharmacies = findViewById(R.id.recyclerViewPharmacies);
         tvEmpty = findViewById(R.id.tvEmpty);
         tvCount = findViewById(R.id.tvCount);
         btnClearAll = findViewById(R.id.btnClearAll);
         emptyState = findViewById(R.id.emptyState);
 
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new FavouriteAdapter(favouriteList);
-        recyclerView.setAdapter(adapter);
+        recyclerViewPharmacies.setLayoutManager(new LinearLayoutManager(this));
+        pharmacyAdapter = new PharmacyAdapter(favouritePharmacyList, PharmacyAdapter.Mode.FAVOURITES);
+        pharmacyAdapter.setOnDeleteClickListener(pharmacy -> {
+            storageHelper.removeFavouritePharmacy(pharmacy.getId());
+            Toast.makeText(this, pharmacy.getName() + " removed from favourites", Toast.LENGTH_SHORT).show();
+            loadFavourites();
+        });
+        recyclerViewPharmacies.setAdapter(pharmacyAdapter);
     }
 
     private void loadFavourites() {
-        favouriteList.clear();
-        favouriteList.addAll(storageHelper.getMedicines());
-        adapter.notifyDataSetChanged();
+        favouritePharmacyList.clear();
+        favouritePharmacyList.addAll(storageHelper.getFavouritePharmacies());
+        pharmacyAdapter.updateData(favouritePharmacyList);
 
-        boolean isEmpty = favouriteList.isEmpty();
+        boolean isEmpty = favouritePharmacyList.isEmpty();
 
-        recyclerView.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
+        recyclerViewPharmacies.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
         emptyState.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
         btnClearAll.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
 
         if (tvCount != null) {
-            tvCount.setText(favouriteList.size() + " items");
+            tvCount.setText(favouritePharmacyList.size() + " items");
         }
     }
 
-    public void goToCamera(View view) {
-        Intent intent = new Intent(this, CameraActivity.class);
+    public void goToNearbyPharmacy(View view) {
+        Intent intent = new Intent(this, NearbyPharmacyActivity.class);
         startActivity(intent);
     }
 
