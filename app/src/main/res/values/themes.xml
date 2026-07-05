@@ -1,9 +1,25 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Base.Theme.MediNear" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
-    </style>
+        <!-- Primary brand color -->
+        <item name="colorPrimary">@color/brand_primary</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+        <item name="colorPrimaryContainer">@color/brand_primary_soft</item>
+        <item name="colorOnPrimaryContainer">@color/brand_primary_dark</item>
 
+        <!-- Secondary (guna warna sama supaya consistent, satu accent je) -->
+        <item name="colorSecondary">@color/brand_primary</item>
+        <item name="colorOnSecondary">@android:color/white</item>
+        <item name="colorSecondaryContainer">@color/brand_primary_soft</item>
+        <item name="colorOnSecondaryContainer">@color/brand_primary_dark</item>
+
+        <!-- Surface & background -->
+        <item name="android:colorBackground">@color/bg_screen</item>
+        <item name="colorSurface">@color/surface_card</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+
+        <!-- Error state (untuk delete/danger action) -->
+        <item name="colorError">@color/danger</item>
+    </style>
     <style name="Theme.MediNear" parent="Base.Theme.MediNear" />
 </resources>

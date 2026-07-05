@@ -70,7 +70,20 @@ public class ReminderStorageHelper {
         saveReminders(reminders);
     }
 
+    public void updateReminder(Reminder updated) {
+        List<Reminder> reminders = getReminders();
+        for (int i = 0; i < reminders.size(); i++) {
+            if (reminders.get(i).getId().equals(updated.getId())) {
+                reminders.set(i, updated);
+                break;
+            }
+        }
+        saveReminders(reminders);
+    }
+
     public void clearAll() {
         prefs.edit().clear().apply();
     }
+
 }
+

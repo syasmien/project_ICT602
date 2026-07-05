@@ -7,21 +7,26 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.medinear.R;
 import com.example.medinear.adapters.ReminderAdapter;
 import com.example.medinear.models.Reminder;
 import com.example.medinear.utils.ReminderReceiver;
 import com.example.medinear.utils.ReminderStorageHelper;
+import com.google.android.material.textfield.TextInputEditText;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -34,11 +39,12 @@ public class MedicineReminderActivity extends AppCompatActivity {
     private Button btnPickTime, btnAddReminder;
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
+    private View tvEmptyContainer;
     private TextView tvEmpty;
 
     private String selectedTime = "";
-    private int selectedHour = -1;   // NEW
-    private int selectedMinute = -1; // NEW
+    private int selectedHour = -1;
+    private int selectedMinute = -1;
 
     private ReminderStorageHelper reminderStorage;
     private ReminderAdapter adapter;
@@ -58,6 +64,7 @@ public class MedicineReminderActivity extends AppCompatActivity {
         btnAddReminder = findViewById(R.id.btnAddReminder);
         recyclerView = findViewById(R.id.recyclerView);
         progressBar = findViewById(R.id.progressBar);
+        tvEmptyContainer = findViewById(R.id.tvEmptyContainer);
         tvEmpty = findViewById(R.id.tvEmpty);
 
         if (getSupportActionBar() != null) {
@@ -66,7 +73,7 @@ public class MedicineReminderActivity extends AppCompatActivity {
         }
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new ReminderAdapter(reminderList, this::deleteReminder);
+        adapter = new ReminderAdapter(reminderList, this::deleteReminder, this::startEdit, this::toggleActive);
         recyclerView.setAdapter(adapter);
 
         btnPickTime.setOnClickListener(v -> showTimePicker());
@@ -88,8 +95,8 @@ public class MedicineReminderActivity extends AppCompatActivity {
                 return;
             }
 
-            selectedHour = hour;     // NEW
-            selectedMinute = minute; // NEW
+            selectedHour = hour;
+            selectedMinute = minute;
             selectedTime = String.format("%02d:%02d", hour, minute);
             tvSelectedTime.setText("⏰ Time: " + selectedTime);
         }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show();
@@ -104,13 +111,11 @@ public class MedicineReminderActivity extends AppCompatActivity {
             etMedicineName.requestFocus();
             return;
         }
-
         if (dosage.isEmpty()) {
             etDosage.setError("Dosage required");
             etDosage.requestFocus();
             return;
         }
-
         if (selectedTime.isEmpty()) {
             Toast.makeText(this, "Please select a reminder time", Toast.LENGTH_SHORT).show();
             return;
@@ -137,32 +142,117 @@ public class MedicineReminderActivity extends AppCompatActivity {
         );
 
         reminderStorage.addReminder(reminder);
-
         reminderList.add(reminder);
         adapter.notifyDataSetChanged();
-
         updateEmptyState();
 
-        // CHANGED - schedule the real notification for the chosen time instead of firing one now
         scheduleReminderAlarm(reminder, selectedHour, selectedMinute);
 
-        // CHANGED - simple confirmation instead of the old detailed push notification
         Toast.makeText(this,
                 medicineName + " reminder has been set",
                 Toast.LENGTH_LONG).show();
 
         etMedicineName.setText("");
         etDosage.setText("");
-        tvSelectedTime.setText("No time selected");
+        tvSelectedTime.setText("No intake time selected");
         selectedTime = "";
         selectedHour = -1;
         selectedMinute = -1;
-
         progressBar.setVisibility(View.GONE);
         btnAddReminder.setEnabled(true);
     }
 
-    // NEW - schedules a real alarm that fires the "time to take medicine" notification later
+    // ===== EDIT — dialog popup, tak guna form utama =====
+    private void startEdit(Reminder reminder) {
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_edit_reminder, null);
+
+        TextInputEditText etEditName = dialogView.findViewById(R.id.etEditMedicineName);
+        TextInputEditText etEditDosage = dialogView.findViewById(R.id.etEditDosage);
+        TextView tvEditTime = dialogView.findViewById(R.id.tvEditSelectedTime);
+        Button btnEditPickTime = dialogView.findViewById(R.id.btnEditPickTime);
+        Button btnSave = dialogView.findViewById(R.id.btnSaveEdit);
+        Button btnCancel = dialogView.findViewById(R.id.btnCancelEdit);
+
+        etEditName.setText(reminder.getMedicineName());
+        etEditDosage.setText(reminder.getDosage());
+        tvEditTime.setText("⏰ " + reminder.getTime());
+
+        final int[] editHour = new int[1];
+        final int[] editMinute = new int[1];
+        String[] parts = reminder.getTime().split(":");
+        editHour[0] = Integer.parseInt(parts[0]);
+        editMinute[0] = Integer.parseInt(parts[1]);
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(dialogView)
+                .setCancelable(true)
+                .create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        btnEditPickTime.setOnClickListener(v -> {
+            Calendar cal = Calendar.getInstance();
+            new TimePickerDialog(this, (view, hour, minute) -> {
+                editHour[0] = hour;
+                editMinute[0] = minute;
+                tvEditTime.setText(String.format("⏰ %02d:%02d", hour, minute));
+            }, editHour[0], editMinute[0], true).show();
+        });
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnSave.setOnClickListener(v -> {
+            String newName = etEditName.getText().toString().trim();
+            String newDosage = etEditDosage.getText().toString().trim();
+
+            if (newName.isEmpty()) {
+                etEditName.setError("Medicine name required");
+                return;
+            }
+            if (newDosage.isEmpty()) {
+                etEditDosage.setError("Dosage required");
+                return;
+            }
+
+            String newTime = String.format("%02d:%02d", editHour[0], editMinute[0]);
+
+            cancelReminderAlarm(reminder);
+            reminder.setMedicineName(newName);
+            reminder.setDosage(newDosage);
+            reminder.setTime(newTime);
+            reminderStorage.updateReminder(reminder);
+
+            if (reminder.isActive()) {
+                scheduleReminderAlarm(reminder, editHour[0], editMinute[0]);
+            }
+
+            loadReminders();
+            Toast.makeText(this, newName + " reminder updated", Toast.LENGTH_SHORT).show();
+            dialog.dismiss();
+        });
+
+        dialog.show();
+    }
+
+    // ===== TOGGLE ACTIVE/INACTIVE — pause/resume alarm tanpa delete data =====
+    private void toggleActive(Reminder reminder, boolean isActive) {
+        reminder.setActive(isActive);
+        reminderStorage.updateReminder(reminder);
+
+        if (isActive) {
+            String[] parts = reminder.getTime().split(":");
+            int hour = Integer.parseInt(parts[0]);
+            int minute = Integer.parseInt(parts[1]);
+            scheduleReminderAlarm(reminder, hour, minute);
+            Toast.makeText(this, reminder.getMedicineName() + " resumed", Toast.LENGTH_SHORT).show();
+        } else {
+            cancelReminderAlarm(reminder);
+            Toast.makeText(this, reminder.getMedicineName() + " paused", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void scheduleReminderAlarm(Reminder reminder, int hour, int minute) {
         Calendar triggerTime = Calendar.getInstance();
         triggerTime.set(Calendar.HOUR_OF_DAY, hour);
@@ -170,7 +260,6 @@ public class MedicineReminderActivity extends AppCompatActivity {
         triggerTime.set(Calendar.SECOND, 0);
         triggerTime.set(Calendar.MILLISECOND, 0);
 
-        // If somehow already passed today, push to tomorrow
         if (triggerTime.before(Calendar.getInstance())) {
             triggerTime.add(Calendar.DAY_OF_YEAR, 1);
         }
@@ -200,7 +289,6 @@ public class MedicineReminderActivity extends AppCompatActivity {
                     triggerTime.getTimeInMillis(),
                     pendingIntent);
         } else {
-            // Fallback for devices/users that haven't granted exact-alarm permission
             alarmManager.setAndAllowWhileIdle(
                     AlarmManager.RTC_WAKEUP,
                     triggerTime.getTimeInMillis(),
@@ -208,7 +296,6 @@ public class MedicineReminderActivity extends AppCompatActivity {
         }
     }
 
-    // NEW - cancels the scheduled alarm when a reminder is deleted
     private void cancelReminderAlarm(Reminder reminder) {
         Intent intent = new Intent(this, ReminderReceiver.class);
         int requestCode = reminder.getId().hashCode();
@@ -226,23 +313,20 @@ public class MedicineReminderActivity extends AppCompatActivity {
 
     private void loadReminders() {
         progressBar.setVisibility(View.VISIBLE);
-
         reminderList.clear();
         List<Reminder> savedReminders = reminderStorage.getReminders();
         reminderList.addAll(savedReminders);
-
         adapter.notifyDataSetChanged();
         progressBar.setVisibility(View.GONE);
-
         updateEmptyState();
     }
 
     private void updateEmptyState() {
         if (reminderList.isEmpty()) {
-            tvEmpty.setVisibility(View.VISIBLE);
+            tvEmptyContainer.setVisibility(View.VISIBLE);
             recyclerView.setVisibility(View.GONE);
         } else {
-            tvEmpty.setVisibility(View.GONE);
+            tvEmptyContainer.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);
         }
     }
@@ -253,12 +337,10 @@ public class MedicineReminderActivity extends AppCompatActivity {
                 .setMessage("Delete reminder for " + reminder.getMedicineName() + "?")
                 .setPositiveButton("Delete", (dialog, which) -> {
                     reminderStorage.deleteReminder(reminder);
-                    cancelReminderAlarm(reminder); // NEW - stop the scheduled notification too
-
+                    cancelReminderAlarm(reminder);
                     reminderList.remove(reminder);
                     adapter.notifyDataSetChanged();
                     updateEmptyState();
-
                     Toast.makeText(this, "Reminder deleted", Toast.LENGTH_SHORT).show();
                 })
                 .setNegativeButton("Cancel", null)
