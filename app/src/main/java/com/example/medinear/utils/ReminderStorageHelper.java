@@ -2,6 +2,8 @@ package com.example.medinear.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.example.medinear.models.Reminder;
@@ -13,11 +15,15 @@ public class ReminderStorageHelper {
 
     private SharedPreferences prefs;
     private Gson gson;
-    private static final String PREF_NAME = "MediNearReminders";
+    private static final String PREF_PREFIX = "MediNearReminders_"; // CHANGED - now a prefix, not the full name
     private static final String KEY_REMINDERS = "reminders";
 
     public ReminderStorageHelper(Context context) {
-        this.prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        // NEW - scope storage per logged-in user instead of one shared file for the whole device
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        String uid = (currentUser != null) ? currentUser.getUid() : "guest";
+
+        this.prefs = context.getSharedPreferences(PREF_PREFIX + uid, Context.MODE_PRIVATE);
         this.gson = new Gson();
     }
 
@@ -49,7 +55,6 @@ public class ReminderStorageHelper {
 
     public void deleteReminder(Reminder reminder) {
         List<Reminder> reminders = getReminders();
-        // Find and remove by ID
         for (int i = 0; i < reminders.size(); i++) {
             if (reminders.get(i).getId().equals(reminder.getId())) {
                 reminders.remove(i);

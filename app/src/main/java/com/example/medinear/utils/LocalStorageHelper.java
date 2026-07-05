@@ -5,6 +5,8 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Environment;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.example.medinear.models.Medicine;
@@ -24,13 +26,18 @@ public class LocalStorageHelper {
     private Context context;
     private SharedPreferences prefs;
     private Gson gson;
-    private static final String PREF_NAME = "MediNearData";
+    private static final String PREF_PREFIX = "MediNearData_"; // CHANGED - now a prefix, not the full name
     private static final String KEY_MEDICINES = "medicines";
-    private static final String KEY_PHARMACIES = "favourite_pharmacies"; // NEW
+    private static final String KEY_PHARMACIES = "favourite_pharmacies";
 
     public LocalStorageHelper(Context context) {
         this.context = context;
-        this.prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+
+        // NEW - scope storage per logged-in user instead of one shared file for the whole device
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        String uid = (currentUser != null) ? currentUser.getUid() : "guest";
+
+        this.prefs = context.getSharedPreferences(PREF_PREFIX + uid, Context.MODE_PRIVATE);
         this.gson = new Gson();
     }
 
@@ -131,7 +138,7 @@ public class LocalStorageHelper {
         saveMedicines(medicines);
     }
 
-    // ============ PHARMACY FAVOURITE METHODS (NEW) ============
+    // ============ PHARMACY FAVOURITE METHODS ============
 
     public void saveFavouritePharmacies(List<Pharmacy> pharmacies) {
         String json = gson.toJson(pharmacies);
@@ -164,7 +171,7 @@ public class LocalStorageHelper {
         List<Pharmacy> pharmacies = getFavouritePharmacies();
         for (Pharmacy p : pharmacies) {
             if (p.getId() != null && p.getId().equals(pharmacy.getId())) {
-                return; // already saved, avoid duplicates
+                return;
             }
         }
         pharmacies.add(pharmacy);
@@ -177,10 +184,6 @@ public class LocalStorageHelper {
         saveFavouritePharmacies(pharmacies);
     }
 
-    /**
-     * Toggles favourite state for a pharmacy. Returns the new state
-     * (true = now favourited, false = now removed).
-     */
     public boolean toggleFavouritePharmacy(Pharmacy pharmacy) {
         if (isFavouritePharmacy(pharmacy.getId())) {
             removeFavouritePharmacy(pharmacy.getId());

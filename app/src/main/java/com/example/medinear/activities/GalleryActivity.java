@@ -1,9 +1,9 @@
 package com.example.medinear.activities;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -21,7 +21,6 @@ public class GalleryActivity extends AppCompatActivity {
     private TextView tvEmpty;
     private LocalStorageHelper storageHelper;
 
-    // ✅ Changed to ArrayList
     private ArrayList<String> imagePaths = new ArrayList<>();
     private ImageAdapter imageAdapter;
 
@@ -35,9 +34,10 @@ public class GalleryActivity extends AppCompatActivity {
         gridView = findViewById(R.id.gridView);
         tvEmpty = findViewById(R.id.tvEmpty);
 
-        // ✅ Initialize adapter with ArrayList
         imageAdapter = new ImageAdapter(this, imagePaths);
         gridView.setAdapter(imageAdapter);
+
+        imageAdapter.setOnDeleteClickListener(this::confirmDeleteImage); // NEW
 
         loadImages();
 
@@ -49,6 +49,43 @@ public class GalleryActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+    }
+
+    // NEW - confirmation dialog before deleting
+    private void confirmDeleteImage(int position) {
+        if (position < 0 || position >= imagePaths.size()) return;
+
+        new AlertDialog.Builder(this)
+                .setTitle("Delete Image")
+                .setMessage("Are you sure you want to delete this image? This cannot be undone.")
+                .setPositiveButton("Delete", (dialog, which) -> deleteImageAt(position))
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    // NEW - removes the matching Medicine (which also deletes the file on disk)
+    private void deleteImageAt(int position) {
+        if (position < 0 || position >= imagePaths.size()) return;
+
+        String pathToDelete = imagePaths.get(position);
+
+        List<Medicine> medicines = storageHelper.getMedicines();
+        Medicine match = null;
+        for (Medicine medicine : medicines) {
+            if (pathToDelete.equals(medicine.getImagePath())) {
+                match = medicine;
+                break;
+            }
+        }
+
+        if (match != null) {
+            storageHelper.deleteMedicine(match); // deletes image file + removes from saved list
+            Toast.makeText(this, "Image deleted", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Could not find matching entry", Toast.LENGTH_SHORT).show();
+        }
+
+        loadImages();
     }
 
     private void loadImages() {

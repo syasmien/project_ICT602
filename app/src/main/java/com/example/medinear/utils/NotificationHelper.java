@@ -1,25 +1,27 @@
 package com.example.medinear.utils;
 
+import android.Manifest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
+import android.util.Log;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.core.content.ContextCompat;
 import com.example.medinear.R;
 import com.example.medinear.activities.MedicineReminderActivity;
 import com.example.medinear.activities.NearbyPharmacyActivity;
 
 public class NotificationHelper {
 
-    // Channel IDs
     private static final String CHANNEL_REMINDER = "medinear_reminder";
     private static final String CHANNEL_PHARMACY = "medinear_pharmacy";
     private static final String CHANNEL_GENERAL = "medinear_general";
 
-    // Notification IDs
     private static int notifId = 1;
 
     public static void createNotificationChannel(Context context) {
@@ -53,11 +55,28 @@ public class NotificationHelper {
         }
     }
 
+    // NEW - shared permission/enabled check with logging so we can see exactly why a notification doesn't show
+    private static boolean canShowNotification(Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                Log.e("NotifDebug", "POST_NOTIFICATIONS not granted — notification blocked");
+                return false;
+            }
+        }
+
+        boolean enabled = NotificationManagerCompat.from(context).areNotificationsEnabled();
+        Log.d("NotifDebug", "areNotificationsEnabled: " + enabled);
+        return enabled;
+    }
+
     public static void sendMedicineReminderNotification(Context context,
                                                         String medicineName,
                                                         String dosage,
                                                         String time) {
         createNotificationChannel(context);
+
+        if (!canShowNotification(context)) return; // NEW
 
         Intent intent = new Intent(context, MedicineReminderActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -80,12 +99,15 @@ public class NotificationHelper {
                 .setAutoCancel(true);
 
         NotificationManagerCompat.from(context).notify(notifId++, builder.build());
+        Log.d("NotifDebug", "notify() called for reminder"); // NEW
     }
 
     public static void sendNearbyPharmacyNotification(Context context,
                                                       String pharmacyName,
                                                       float distanceKm) {
         createNotificationChannel(context);
+
+        if (!canShowNotification(context)) return; // NEW
 
         Intent intent = new Intent(context, NearbyPharmacyActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -110,6 +132,7 @@ public class NotificationHelper {
 
     public static void sendSimpleNotification(Context context, String title, String message) {
         createNotificationChannel(context);
+        if (!canShowNotification(context)) return; // NEW
 
         Intent intent = new Intent(context, MedicineReminderActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -133,6 +156,7 @@ public class NotificationHelper {
                                                     String medicineName,
                                                     String dosage) {
         createNotificationChannel(context);
+        if (!canShowNotification(context)) return; // NEW
 
         Intent intent = new Intent(context, MedicineReminderActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

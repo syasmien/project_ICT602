@@ -1,61 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:padding="16dp"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Full Image"
-            android:textSize="20sp"
-            android:gravity="center" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="✕"
-            android:textSize="24sp"
-            android:padding="8dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:onClick="finish"
-            android:contentDescription="Close" />
-    </LinearLayout>
+    android:layout_height="match_parent"
+    android:background="#000000">
 
     <ImageView
         android:id="@+id/fullImageView"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:adjustViewBounds="true"
-        android:scaleType="fitCenter" />
+        android:layout_height="match_parent"
+        android:scaleType="fitCenter"
+        android:contentDescription="Medicine photo" />
 
-    <TextView
-        android:id="@+id/imageTimestamp"
+    <!-- NEW - caption overlay showing medicine details -->
+    <LinearLayout
+        android:id="@+id/captionContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="Taken on: --"
-        android:textSize="16sp"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp"/>
+        android:layout_gravity="bottom"
+        android:orientation="vertical"
+        android:background="#B3000000"
+        android:padding="20dp">
 
-    <Button
-        android:id="@+id/deleteButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Delete Image"
-        android:layout_marginTop="12dp"
-        android:backgroundTint="@android:color/holo_red_dark"
-        android:textColor="@android:color/white"/>
+        <TextView
+            android:id="@+id/tvMedicineName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Medicine Name"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            android:textStyle="bold" />
 
-</LinearLayout>
+        <TextView
+            android:id="@+id/tvMedicineNotes"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="Notes go here"
+            android:textColor="#E0E0E0"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/tvMedicineTimestamp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="Saved on"
+            android:textColor="#B0B0B0"
+            android:textSize="12sp" />
+
+    </LinearLayout>
+
+</FrameLayout>

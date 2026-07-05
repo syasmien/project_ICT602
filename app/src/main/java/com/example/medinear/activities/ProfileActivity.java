@@ -6,7 +6,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.InputType;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -20,14 +19,14 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
 
+import java.util.Locale;
+
 public class ProfileActivity extends AppCompatActivity {
 
-    private ImageView ivProfilePicture;
+    private TextView tvAvatarInitial;
 
     private TextView tvUserName;
     private TextView tvUserEmail;
-    private TextView tvSavedPharmacies;
-    private TextView tvReminders;
 
     private LinearLayout rowEditProfile;
     private LinearLayout rowChangePassword;
@@ -59,12 +58,10 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void initViews() {
-        ivProfilePicture = findViewById(R.id.ivProfilePicture);
+        tvAvatarInitial = findViewById(R.id.tvAvatarInitial);
 
         tvUserName = findViewById(R.id.tvUserName);
         tvUserEmail = findViewById(R.id.tvUserEmail);
-        tvSavedPharmacies = findViewById(R.id.tvSavedPharmacies);
-        tvReminders = findViewById(R.id.tvReminders);
 
         rowEditProfile = findViewById(R.id.rowEditProfile);
         rowChangePassword = findViewById(R.id.rowChangePassword);
@@ -81,11 +78,12 @@ public class ProfileActivity extends AppCompatActivity {
         tvUserName.setText(userName);
         tvUserEmail.setText(currentUser.getEmail());
 
-        int savedCount = prefs.getInt("saved_pharmacies_count", 0);
-        int reminderCount = prefs.getInt("reminders_count", 0);
+        tvAvatarInitial.setText(getInitial(userName));
+    }
 
-        tvSavedPharmacies.setText(String.valueOf(savedCount));
-        tvReminders.setText(String.valueOf(reminderCount));
+    private String getInitial(String name) {
+        if (name == null || name.trim().isEmpty()) return "U";
+        return String.valueOf(name.trim().charAt(0)).toUpperCase(Locale.getDefault());
     }
 
     private void setupListeners() {
@@ -145,6 +143,7 @@ public class ProfileActivity extends AppCompatActivity {
                         prefs.edit().putString("user_name", newName).apply();
 
                         tvUserName.setText(newName);
+                        tvAvatarInitial.setText(getInitial(newName));
 
                         Toast.makeText(this,
                                 "Profile updated",

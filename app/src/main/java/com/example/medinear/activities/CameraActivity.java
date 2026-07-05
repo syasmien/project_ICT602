@@ -36,6 +36,10 @@ import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Typeface;
 
 public class CameraActivity extends AppCompatActivity {
 
@@ -70,6 +74,48 @@ public class CameraActivity extends AppCompatActivity {
         }
     }
 
+    private Bitmap addTimestampToImage(Bitmap bitmap) {
+
+        Bitmap mutableBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+        Canvas canvas = new Canvas(mutableBitmap);
+
+        String timestamp = new SimpleDateFormat(
+                "dd MMM yyyy  HH:mm:ss",
+                Locale.getDefault()
+        ).format(new Date());
+
+        float textSize = bitmap.getWidth() * 0.035f;
+        float padding = bitmap.getWidth() * 0.025f;
+        float margin = bitmap.getWidth() * 0.025f;
+
+        Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        textPaint.setColor(Color.WHITE);
+        textPaint.setTextSize(textSize);
+        textPaint.setTypeface(Typeface.DEFAULT_BOLD);
+        textPaint.setShadowLayer(4f, 2f, 2f, Color.BLACK);
+
+        Paint bgPaint = new Paint();
+        bgPaint.setColor(Color.argb(180, 0, 0, 0));
+
+        float textWidth = textPaint.measureText(timestamp);
+        float textHeight = textPaint.getTextSize();
+
+        float left = margin;
+        float top = bitmap.getHeight() - textHeight - padding * 2 - margin;
+        float right = left + textWidth + padding * 2;
+        float bottom = bitmap.getHeight() - margin;
+
+        canvas.drawRoundRect(left, top, right, bottom, 20f, 20f, bgPaint);
+
+        canvas.drawText(
+                timestamp,
+                left + padding,
+                bottom - padding,
+                textPaint
+        );
+
+        return mutableBitmap;
+    }
     private void initViews() {
         previewView = findViewById(R.id.previewView);
         ivCapturedPhoto = findViewById(R.id.ivCapturedPhoto);
@@ -165,6 +211,10 @@ public class CameraActivity extends AppCompatActivity {
                             try {
                                 capturedBitmap = MediaStore.Images.Media.getBitmap(
                                         getContentResolver(), imageUri);
+
+// Add timestamp to the image
+                                capturedBitmap = addTimestampToImage(capturedBitmap);
+
                                 showCapturedPhoto();
                             } catch (IOException e) {
                                 e.printStackTrace();

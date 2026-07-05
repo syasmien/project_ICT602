@@ -1,6 +1,11 @@
 package com.example.medinear.activities;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.app.TimePickerDialog;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -15,7 +20,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.medinear.R;
 import com.example.medinear.adapters.ReminderAdapter;
 import com.example.medinear.models.Reminder;
-import com.example.medinear.utils.NotificationHelper;
+import com.example.medinear.utils.ReminderReceiver;
 import com.example.medinear.utils.ReminderStorageHelper;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -32,6 +37,9 @@ public class MedicineReminderActivity extends AppCompatActivity {
     private TextView tvEmpty;
 
     private String selectedTime = "";
+    private int selectedHour = -1;   // NEW
+    private int selectedMinute = -1; // NEW
+
     private ReminderStorageHelper reminderStorage;
     private ReminderAdapter adapter;
     private List<Reminder> reminderList = new ArrayList<>();
@@ -41,10 +49,8 @@ public class MedicineReminderActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_medicine_reminder);
 
-        // Initialize storage helper
         reminderStorage = new ReminderStorageHelper(this);
 
-        // Initialize views
         etMedicineName = findViewById(R.id.etMedicineName);
         etDosage = findViewById(R.id.etDosage);
         tvSelectedTime = findViewById(R.id.tvSelectedTime);
@@ -59,16 +65,13 @@ public class MedicineReminderActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
-        // Setup RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         adapter = new ReminderAdapter(reminderList, this::deleteReminder);
         recyclerView.setAdapter(adapter);
 
-        // Setup click listeners
         btnPickTime.setOnClickListener(v -> showTimePicker());
         btnAddReminder.setOnClickListener(v -> addReminder());
 
-        // Load reminders
         loadReminders();
     }
 
@@ -85,6 +88,8 @@ public class MedicineReminderActivity extends AppCompatActivity {
                 return;
             }
 
+            selectedHour = hour;     // NEW
+            selectedMinute = minute; // NEW
             selectedTime = String.format("%02d:%02d", hour, minute);
             tvSelectedTime.setText("⏰ Time: " + selectedTime);
         }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show();
@@ -111,7 +116,6 @@ public class MedicineReminderActivity extends AppCompatActivity {
             return;
         }
 
-        // Check for duplicate reminder
         for (Reminder existing : reminderList) {
             if (existing.getMedicineName().equalsIgnoreCase(medicineName)
                     && existing.getTime().equals(selectedTime)) {
@@ -124,7 +128,6 @@ public class MedicineReminderActivity extends AppCompatActivity {
         progressBar.setVisibility(View.VISIBLE);
         btnAddReminder.setEnabled(false);
 
-        // Create new reminder with unique ID
         Reminder reminder = new Reminder(
                 UUID.randomUUID().toString(),
                 medicineName,
@@ -133,38 +136,97 @@ public class MedicineReminderActivity extends AppCompatActivity {
                 true
         );
 
-        // ✅ Save to storage FIRST
         reminderStorage.addReminder(reminder);
 
-        // ✅ Then add to list and update UI
         reminderList.add(reminder);
         adapter.notifyDataSetChanged();
 
-        // ✅ Update empty state
         updateEmptyState();
 
-        // Send notification
-        NotificationHelper.sendMedicineReminderNotification(
-                this, medicineName, dosage, selectedTime);
+        // CHANGED - schedule the real notification for the chosen time instead of firing one now
+        scheduleReminderAlarm(reminder, selectedHour, selectedMinute);
 
+        // CHANGED - simple confirmation instead of the old detailed push notification
         Toast.makeText(this,
-                "Reminder set for " + medicineName + " at " + selectedTime,
+                medicineName + " reminder has been set",
                 Toast.LENGTH_LONG).show();
 
-        // Clear inputs
         etMedicineName.setText("");
         etDosage.setText("");
         tvSelectedTime.setText("No time selected");
         selectedTime = "";
+        selectedHour = -1;
+        selectedMinute = -1;
 
         progressBar.setVisibility(View.GONE);
         btnAddReminder.setEnabled(true);
     }
 
+    // NEW - schedules a real alarm that fires the "time to take medicine" notification later
+    private void scheduleReminderAlarm(Reminder reminder, int hour, int minute) {
+        Calendar triggerTime = Calendar.getInstance();
+        triggerTime.set(Calendar.HOUR_OF_DAY, hour);
+        triggerTime.set(Calendar.MINUTE, minute);
+        triggerTime.set(Calendar.SECOND, 0);
+        triggerTime.set(Calendar.MILLISECOND, 0);
+
+        // If somehow already passed today, push to tomorrow
+        if (triggerTime.before(Calendar.getInstance())) {
+            triggerTime.add(Calendar.DAY_OF_YEAR, 1);
+        }
+
+        Intent intent = new Intent(this, ReminderReceiver.class);
+        intent.putExtra(ReminderReceiver.EXTRA_MEDICINE_NAME, reminder.getMedicineName());
+        intent.putExtra(ReminderReceiver.EXTRA_DOSAGE, reminder.getDosage());
+
+        int requestCode = reminder.getId().hashCode();
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                this,
+                requestCode,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        if (alarmManager == null) return;
+
+        boolean canScheduleExact = true;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            canScheduleExact = alarmManager.canScheduleExactAlarms();
+        }
+
+        if (canScheduleExact) {
+            alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerTime.getTimeInMillis(),
+                    pendingIntent);
+        } else {
+            // Fallback for devices/users that haven't granted exact-alarm permission
+            alarmManager.setAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerTime.getTimeInMillis(),
+                    pendingIntent);
+        }
+    }
+
+    // NEW - cancels the scheduled alarm when a reminder is deleted
+    private void cancelReminderAlarm(Reminder reminder) {
+        Intent intent = new Intent(this, ReminderReceiver.class);
+        int requestCode = reminder.getId().hashCode();
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                this,
+                requestCode,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        if (alarmManager != null) {
+            alarmManager.cancel(pendingIntent);
+        }
+    }
+
     private void loadReminders() {
         progressBar.setVisibility(View.VISIBLE);
 
-        // ✅ Load reminders from storage
         reminderList.clear();
         List<Reminder> savedReminders = reminderStorage.getReminders();
         reminderList.addAll(savedReminders);
@@ -190,10 +252,9 @@ public class MedicineReminderActivity extends AppCompatActivity {
                 .setTitle("Delete Reminder")
                 .setMessage("Delete reminder for " + reminder.getMedicineName() + "?")
                 .setPositiveButton("Delete", (dialog, which) -> {
-                    // ✅ Remove from storage
                     reminderStorage.deleteReminder(reminder);
+                    cancelReminderAlarm(reminder); // NEW - stop the scheduled notification too
 
-                    // ✅ Remove from list and update UI
                     reminderList.remove(reminder);
                     adapter.notifyDataSetChanged();
                     updateEmptyState();
@@ -207,7 +268,6 @@ public class MedicineReminderActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // ✅ Refresh reminders when returning to this activity
         loadReminders();
     }
 
