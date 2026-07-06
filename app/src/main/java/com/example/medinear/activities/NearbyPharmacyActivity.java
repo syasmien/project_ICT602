@@ -1,6 +1,7 @@
 package com.example.medinear.activities;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
@@ -28,6 +29,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -37,12 +39,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class NearbyPharmacyActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
-    private static final String PLACES_API_KEY = "AIzaSyDr64tr-Y3YopYDi7PmbUou96Q0o3wSYlI"; //
+    private static final String PLACES_API_KEY = "AIzaSyDr64tr-Y3YopYDi7PmbUou96Q0o3wSYlI";
     private static final int SEARCH_RADIUS_METERS = 3000;
 
     private GoogleMap googleMap;
@@ -52,7 +56,8 @@ public class NearbyPharmacyActivity extends AppCompatActivity implements OnMapRe
     private final List<Pharmacy> pharmacyList = new ArrayList<>();
     private Location currentLocation;
     private RequestQueue requestQueue;
-    private LocalStorageHelper storageHelper; // NEW
+    private LocalStorageHelper storageHelper;
+    private Map<String, Pharmacy> markerPharmacyMap = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,20 +65,18 @@ public class NearbyPharmacyActivity extends AppCompatActivity implements OnMapRe
         setContentView(R.layout.activity_nearby_pharmacy);
 
         requestQueue = Volley.newRequestQueue(this);
-        storageHelper = new LocalStorageHelper(this); // NEW
+        storageHelper = new LocalStorageHelper(this);
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new PharmacyAdapter(pharmacyList, PharmacyAdapter.Mode.NEARBY); // CHANGED
+        adapter = new PharmacyAdapter(pharmacyList, PharmacyAdapter.Mode.NEARBY);
 
-        adapter.setOnAddFavouriteClickListener(pharmacy -> { // CHANGED - was setOnFavouriteClickListener
+        adapter.setOnAddFavouriteClickListener(pharmacy -> {
             storageHelper.addFavouritePharmacy(pharmacy);
             Toast.makeText(this, pharmacy.getName() + " added to favourites", Toast.LENGTH_SHORT).show();
         });
-
-        recyclerView.setAdapter(adapter);
 
         recyclerView.setAdapter(adapter);
 
@@ -128,6 +131,8 @@ public class NearbyPharmacyActivity extends AppCompatActivity implements OnMapRe
         );
 
         googleMap.clear();
+        markerPharmacyMap.clear();
+
         googleMap.addMarker(new MarkerOptions()
                 .position(currentLatLng)
                 .title("You are here"));
@@ -146,6 +151,23 @@ public class NearbyPharmacyActivity extends AppCompatActivity implements OnMapRe
         if (currentLocation != null) {
             updateMapWithLocation();
         }
+
+        // Set marker click listener
+        googleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(@NonNull Marker marker) {
+                if (marker.getTitle() != null && !marker.getTitle().equals("You are here")) {
+                    Pharmacy pharmacy = markerPharmacyMap.get(marker.getId());
+                    if (pharmacy != null) {
+                        Intent intent = new Intent(NearbyPharmacyActivity.this, PharmacyDetailActivity.class);
+                        intent.putExtra("pharmacy", pharmacy);
+                        startActivity(intent);
+                        return true;
+                    }
+                }
+                return false;
+            }
+        });
     }
 
     private void loadNearbyPharmacies() {
@@ -175,6 +197,7 @@ public class NearbyPharmacyActivity extends AppCompatActivity implements OnMapRe
 
     private void handlePlacesResponse(JSONObject response) {
         pharmacyList.clear();
+        markerPharmacyMap.clear();
 
         String status = response.optString("status", "");
         if (!"OK".equals(status) && !"ZERO_RESULTS".equals(status)) {
@@ -191,9 +214,12 @@ public class NearbyPharmacyActivity extends AppCompatActivity implements OnMapRe
         if (googleMap != null) {
             googleMap.clear();
             if (currentLocation != null) {
-                googleMap.addMarker(new MarkerOptions()
+                Marker userMarker = googleMap.addMarker(new MarkerOptions()
                         .position(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()))
                         .title("You are here"));
+                if (userMarker != null) {
+                    markerPharmacyMap.put(userMarker.getId(), null);
+                }
             }
         }
 
@@ -210,7 +236,7 @@ public class NearbyPharmacyActivity extends AppCompatActivity implements OnMapRe
                 double lng = locationObj.optDouble("lng", 0);
 
                 Pharmacy pharmacy = new Pharmacy();
-                pharmacy.setId(obj.optString("place_id", null)); // FIXED - was never set before, needed for favouriting
+                pharmacy.setId(obj.optString("place_id", null));
                 pharmacy.setName(obj.optString("name", "Unknown Pharmacy"));
                 pharmacy.setAddress(obj.optString("vicinity", ""));
                 pharmacy.setLatitude(lat);
@@ -226,20 +252,28 @@ public class NearbyPharmacyActivity extends AppCompatActivity implements OnMapRe
                     Location.distanceBetween(
                             currentLocation.getLatitude(), currentLocation.getLongitude(),
                             lat, lng, distResult);
-                    pharmacy.setDistance(distResult[0] / 1000f); // meters to km
+                    pharmacy.setDistance(distResult[0] / 1000f);
                 }
 
-                // NEW - reflect saved favourite state as soon as the list loads
                 pharmacy.setFavourite(storageHelper.isFavouritePharmacy(pharmacy.getId()));
 
                 pharmacyList.add(pharmacy);
 
                 if (googleMap != null) {
-                    googleMap.addMarker(new MarkerOptions()
+                    Marker marker = googleMap.addMarker(new MarkerOptions()
                             .position(new LatLng(lat, lng))
                             .title(pharmacy.getName())
                             .snippet(pharmacy.getAddress()));
+                    if (marker != null) {
+                        markerPharmacyMap.put(marker.getId(), pharmacy);
+                    }
                 }
+
+                // Fetch additional details like phone number
+                if (pharmacy.getId() != null) {
+                    fetchPlaceDetails(pharmacy.getId(), pharmacy);
+                }
+
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -256,6 +290,58 @@ public class NearbyPharmacyActivity extends AppCompatActivity implements OnMapRe
         } else {
             Toast.makeText(this, "No pharmacies found nearby", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void fetchPlaceDetails(String placeId, Pharmacy pharmacy) {
+        String url = "https://maps.googleapis.com/maps/api/place/details/json"
+                + "?place_id=" + placeId
+                + "&fields=formatted_phone_number,opening_hours,website"
+                + "&key=" + PLACES_API_KEY;
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+                    try {
+                        JSONObject result = response.getJSONObject("result");
+
+                        // Get phone number
+                        String phone = result.optString("formatted_phone_number", "");
+                        pharmacy.setPhone(phone);
+
+                        // Get opening hours
+                        JSONObject hours = result.optJSONObject("opening_hours");
+                        if (hours != null) {
+                            JSONArray weekdayText = hours.optJSONArray("weekday_text");
+                            if (weekdayText != null && weekdayText.length() > 0) {
+                                StringBuilder hoursText = new StringBuilder();
+                                for (int i = 0; i < weekdayText.length(); i++) {
+                                    hoursText.append(weekdayText.getString(i)).append("\n");
+                                }
+                                pharmacy.setOpeningHours(hoursText.toString());
+                            }
+                        }
+
+                        // Update the pharmacy in the list
+                        for (int i = 0; i < pharmacyList.size(); i++) {
+                            if (pharmacyList.get(i).getId().equals(pharmacy.getId())) {
+                                pharmacyList.set(i, pharmacy);
+                                adapter.notifyItemChanged(i);
+                                break;
+                            }
+                        }
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                },
+                error -> {
+                    // Silently fail for additional details
+                }
+        );
+
+        requestQueue.add(request);
     }
 
     @Override

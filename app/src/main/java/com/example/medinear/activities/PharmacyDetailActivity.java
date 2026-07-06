@@ -3,83 +3,104 @@ package com.example.medinear.activities;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.*;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+
 import com.example.medinear.R;
 import com.example.medinear.models.Pharmacy;
 
 public class PharmacyDetailActivity extends AppCompatActivity {
 
-    private TextView tvName, tvAddress, tvPhone, tvHours, tvDistance;
+    private TextView tvName, tvDistance, tvAddress, tvPhone, tvHours;
     private Button btnNavigate, btnCall;
-
-    private String name, address, phone, hours;
-    private double lat, lng, distance;
+    private Pharmacy pharmacy;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pharmacy_detail);
 
+        // Initialize views
         tvName = findViewById(R.id.tvName);
+        tvDistance = findViewById(R.id.tvDistance);
         tvAddress = findViewById(R.id.tvAddress);
         tvPhone = findViewById(R.id.tvPhone);
         tvHours = findViewById(R.id.tvHours);
-        tvDistance = findViewById(R.id.tvDistance);
-
         btnNavigate = findViewById(R.id.btnNavigate);
         btnCall = findViewById(R.id.btnCall);
 
-        getSupportActionBar().setTitle("Pharmacy Details");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        // Get pharmacy data
+        pharmacy = (Pharmacy) getIntent().getSerializableExtra("pharmacy");
+        if (pharmacy == null) {
+            Toast.makeText(this, "Pharmacy data not found", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
 
-        // Get data from intent
-        Intent intent = getIntent();
-        name = intent.getStringExtra("name");
-        address = intent.getStringExtra("address");
-        phone = intent.getStringExtra("phone");
-        hours = intent.getStringExtra("hours");
-        lat = intent.getDoubleExtra("lat", 0);
-        lng = intent.getDoubleExtra("lng", 0);
-        distance = intent.getDoubleExtra("distance", 0);
+        // Display data
+        displayPharmacyDetails();
 
-        // Set data
-        tvName.setText(name);
-        tvAddress.setText(address);
-        tvPhone.setText(phone);
-        tvHours.setText(hours);
-        tvDistance.setText(String.format("%.1f km away", distance));
-
-        // Navigate button
-        btnNavigate.setOnClickListener(v -> openGoogleMaps());
-
-        // Call button
-        btnCall.setOnClickListener(v -> {
-            Intent callIntent = new Intent(Intent.ACTION_DIAL);
-            callIntent.setData(Uri.parse("tel:" + phone));
-            startActivity(callIntent);
-        });
+        // Set click listeners
+        btnNavigate.setOnClickListener(v -> navigateToPharmacy());
+        btnCall.setOnClickListener(v -> callPharmacy());
     }
 
-    private void openGoogleMaps() {
-        Uri uri = Uri.parse("google.navigation:q=" + lat + "," + lng + "&mode=d");
-        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-        intent.setPackage("com.google.android.apps.maps");
+    private void displayPharmacyDetails() {
+        tvName.setText(pharmacy.getName());
 
-        if (intent.resolveActivity(getPackageManager()) != null) {
-            startActivity(intent);
+        String distanceText = String.format("%.1f km away", pharmacy.getDistance());
+        tvDistance.setText(distanceText);
+
+        tvAddress.setText(pharmacy.getAddress());
+
+        // Phone
+        if (pharmacy.getPhone() != null && !pharmacy.getPhone().isEmpty()) {
+            tvPhone.setText(pharmacy.getPhone());
         } else {
-            Uri browserUri = Uri.parse(
-                    "https://www.google.com/maps/dir/?api=1&destination=" + lat + "," + lng
-            );
-            startActivity(new Intent(Intent.ACTION_VIEW, browserUri));
+            tvPhone.setText("Phone number not available");
+        }
+
+        // Hours
+        if (pharmacy.getOpeningHours() != null && !pharmacy.getOpeningHours().isEmpty()) {
+            tvHours.setText(pharmacy.getOpeningHours());
+        } else if (pharmacy.isOpenNow()) {
+            tvHours.setText("🟢 Open now");
+            tvHours.setTextColor(ContextCompat.getColor(this, R.color.green));
+        } else {
+            tvHours.setText("🔴 Closed");
+            tvHours.setTextColor(ContextCompat.getColor(this, R.color.red));
         }
     }
 
-    @Override
-    public boolean onSupportNavigateUp() {
-        finish();
-        return true;
+    private void navigateToPharmacy() {
+        // Open Google Maps with navigation
+        Uri gmmIntentUri = Uri.parse("google.navigation:q=" +
+                pharmacy.getLatitude() + "," + pharmacy.getLongitude());
+        Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+        mapIntent.setPackage("com.google.android.apps.maps");
+
+        if (mapIntent.resolveActivity(getPackageManager()) != null) {
+            startActivity(mapIntent);
+        } else {
+            // Fallback to web-based Google Maps
+            Uri webUri = Uri.parse("https://maps.google.com/maps?q=" +
+                    pharmacy.getLatitude() + "," + pharmacy.getLongitude());
+            Intent webIntent = new Intent(Intent.ACTION_VIEW, webUri);
+            startActivity(webIntent);
+        }
+    }
+
+    private void callPharmacy() {
+        if (pharmacy.getPhone() != null && !pharmacy.getPhone().isEmpty()) {
+            Intent callIntent = new Intent(Intent.ACTION_DIAL);
+            callIntent.setData(Uri.parse("tel:" + pharmacy.getPhone()));
+            startActivity(callIntent);
+        } else {
+            Toast.makeText(this, "Phone number not available", Toast.LENGTH_SHORT).show();
+        }
     }
 }

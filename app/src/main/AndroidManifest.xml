@@ -78,8 +78,8 @@
             android:screenOrientation="portrait" />
         <activity
             android:name=".activities.PharmacyDetailActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
+            android:parentActivityName=".activities.NearbyPharmacyActivity"
+            android:theme="@style/Theme.MediNear"/>
         <activity
             android:name=".activities.CameraActivity"
             android:exported="false"

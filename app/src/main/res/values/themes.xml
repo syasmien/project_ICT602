@@ -1,5 +1,5 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+    <!-- Base application theme -->
     <style name="Base.Theme.MediNear" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Primary brand color -->
         <item name="colorPrimary">@color/brand_primary</item>
@@ -7,7 +7,7 @@
         <item name="colorPrimaryContainer">@color/brand_primary_soft</item>
         <item name="colorOnPrimaryContainer">@color/brand_primary_dark</item>
 
-        <!-- Secondary (guna warna sama supaya consistent, satu accent je) -->
+        <!-- Secondary -->
         <item name="colorSecondary">@color/brand_primary</item>
         <item name="colorOnSecondary">@android:color/white</item>
         <item name="colorSecondaryContainer">@color/brand_primary_soft</item>
@@ -18,8 +18,13 @@
         <item name="colorSurface">@color/surface_card</item>
         <item name="colorOnSurface">@color/text_primary</item>
 
-        <!-- Error state (untuk delete/danger action) -->
+        <!-- Error state -->
         <item name="colorError">@color/danger</item>
+
+        <!-- Status bar -->
+        <item name="android:statusBarColor">@color/brand_primary_dark</item>
     </style>
+
+    <!-- Main application theme -->
     <style name="Theme.MediNear" parent="Base.Theme.MediNear" />
 </resources>
