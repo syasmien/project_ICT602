@@ -63,12 +63,12 @@
             android:id="@+id/btnDialogConfirm"
             android:layout_width="0dp"
             android:layout_height="48dp"
-            android:layout_weight="1"
             android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_button_danger"
+            android:backgroundTint="@null"
             android:text="Delete"
             android:textAllCaps="false"
-            android:textColor="@android:color/white"
-            android:background="@drawable/bg_button_danger"
-            android:backgroundTint="@null" />
+            android:textColor="@android:color/white" />
     </LinearLayout>
 </LinearLayout>

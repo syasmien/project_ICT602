@@ -332,19 +332,38 @@ public class MedicineReminderActivity extends AppCompatActivity {
     }
 
     private void deleteReminder(Reminder reminder) {
-        new AlertDialog.Builder(this)
-                .setTitle("Delete Reminder")
-                .setMessage("Delete reminder for " + reminder.getMedicineName() + "?")
-                .setPositiveButton("Delete", (dialog, which) -> {
-                    reminderStorage.deleteReminder(reminder);
-                    cancelReminderAlarm(reminder);
-                    reminderList.remove(reminder);
-                    adapter.notifyDataSetChanged();
-                    updateEmptyState();
-                    Toast.makeText(this, "Reminder deleted", Toast.LENGTH_SHORT).show();
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_confirm, null);
+
+        TextView tvTitle = dialogView.findViewById(R.id.tvDialogTitle);
+        TextView tvMessage = dialogView.findViewById(R.id.tvDialogMessage);
+        Button btnCancel = dialogView.findViewById(R.id.btnDialogCancel);
+        Button btnConfirm = dialogView.findViewById(R.id.btnDialogConfirm);
+
+        tvTitle.setText("Delete Reminder");
+        tvMessage.setText("Delete reminder for " + reminder.getMedicineName() + "? This cannot be undone.");
+        btnConfirm.setText("Delete");
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(dialogView)
+                .setCancelable(true)
+                .create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+        btnConfirm.setOnClickListener(v -> {
+            reminderStorage.deleteReminder(reminder);
+            cancelReminderAlarm(reminder);
+            reminderList.remove(reminder);
+            adapter.notifyDataSetChanged();
+            updateEmptyState();
+            Toast.makeText(this, "Reminder deleted", Toast.LENGTH_SHORT).show();
+            dialog.dismiss();
+        });
+
+        dialog.show();
     }
 
     @Override

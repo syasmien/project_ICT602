@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F2F4F3"
+    android:background="@drawable/bg_screen_gradient"
     android:fillViewport="true">
 
     <LinearLayout
@@ -12,226 +11,198 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Gradient Header -->
-        <RelativeLayout
+        <!-- HEADER (MATCH HOME STYLE) -->
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="170dp"
-            android:background="@drawable/gradient_header">
+            android:layout_height="160dp"
+            android:background="@drawable/bg_header_gradient"
+            android:gravity="center"
+            android:orientation="vertical">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:layout_marginTop="28dp"
                 android:text="My Profile"
                 android:textColor="@android:color/white"
                 android:textSize="20sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:layout_marginTop="4dp"
-                android:alpha="0.85"
                 android:text="Manage your account"
                 android:textColor="@android:color/white"
-                android:textSize="12sp" />
-
-        </RelativeLayout>
-
-        <!-- Avatar -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="-55dp"
-            android:gravity="center_horizontal"
-            android:orientation="vertical">
-
-            <FrameLayout
-                android:layout_width="110dp"
-                android:layout_height="110dp"
-                android:elevation="6dp">
-
-                <TextView
-                    android:id="@+id/tvAvatarInitial"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@drawable/circle_background"
-                    android:gravity="center"
-                    android:text="U"
-                    android:textColor="@android:color/white"
-                    android:textSize="42sp"
-                    android:textStyle="bold" />
-
-            </FrameLayout>
-
-            <TextView
-                android:id="@+id/tvUserName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:text="Name"
-                android:textColor="#1B1B1B"
-                android:textSize="20sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvUserEmail"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:text="email@example.com"
-                android:textColor="#7A7A7A"
-                android:textSize="13sp" />
-
+                android:alpha="0.85"
+                android:textSize="12sp"/>
         </LinearLayout>
 
-        <!-- Settings Card -->
+        <!-- PROFILE CARD -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="20dp"
-            app:cardCornerRadius="14dp"
-            app:cardElevation="3dp">
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="@color/surface_card">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center_horizontal"
+                android:padding="20dp">
+
+                <FrameLayout
+                    android:layout_width="90dp"
+                    android:layout_height="90dp"
+                    android:background="@drawable/circle_icon_bg_profile">
+
+                    <TextView
+                        android:id="@+id/tvAvatarInitial"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:text="U"
+                        android:textColor="@android:color/white"
+                        android:textSize="34sp"
+                        android:textStyle="bold"/>
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/tvUserName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="User Name"
+                    android:textColor="@color/text_primary"
+                    android:textSize="18sp"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:id="@+id/tvUserEmail"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="email@example.com"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp"/>
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- SETTINGS CARD (MATCH HOME CARD STYLE) -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginTop="6dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="1dp"
+            app:cardBackgroundColor="@color/surface_card">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <!-- Edit Profile -->
+                <!-- EDIT -->
                 <LinearLayout
                     android:id="@+id/rowEditProfile"
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
-                    android:background="@drawable/row_ripple"
-                    android:clickable="true"
-                    android:focusable="true"
+                    android:padding="16dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp">
+                    android:background="?android:attr/selectableItemBackground">
 
-                    <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
-                        android:contentDescription="Edit Profile"
-                        android:src="@android:drawable/ic_menu_edit"
-                        app:tint="#2E7D32" />
+                    <TextView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:text="👤"/>
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="16dp"
                         android:layout_weight="1"
+                        android:layout_marginStart="14dp"
                         android:text="Edit Profile"
-                        android:textColor="#1B1B1B"
-                        android:textSize="15sp" />
-
-                    <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:contentDescription="Go"
-                        android:src="@android:drawable/ic_media_play"
-                        app:tint="#BDBDBD" />
-
+                        android:textColor="@color/text_primary"
+                        android:textSize="15sp"/>
                 </LinearLayout>
 
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:layout_marginStart="54dp"
-                    android:background="#EEEEEE" />
+                    android:background="@color/border_subtle"/>
 
-                <!-- Change Password -->
+                <!-- PASSWORD -->
                 <LinearLayout
                     android:id="@+id/rowChangePassword"
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
-                    android:background="@drawable/row_ripple"
-                    android:clickable="true"
-                    android:focusable="true"
+                    android:padding="16dp"
                     android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp">
+                    android:orientation="horizontal">
 
-                    <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
-                        android:contentDescription="Change Password"
-                        android:src="@android:drawable/ic_lock_lock"
-                        app:tint="#2E7D32" />
+                    <TextView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:text="🔒"/>
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="16dp"
                         android:layout_weight="1"
+                        android:layout_marginStart="14dp"
                         android:text="Change Password"
-                        android:textColor="#1B1B1B"
-                        android:textSize="15sp" />
-
-                    <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:contentDescription="Go"
-                        android:src="@android:drawable/ic_media_play"
-                        app:tint="#BDBDBD" />
-
+                        android:textColor="@color/text_primary"
+                        android:textSize="15sp"/>
                 </LinearLayout>
 
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:layout_marginStart="54dp"
-                    android:background="#EEEEEE" />
+                    android:background="@color/border_subtle"/>
 
-                <!-- Logout -->
+                <!-- LOGOUT -->
                 <LinearLayout
                     android:id="@+id/rowLogout"
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
-                    android:background="@drawable/row_ripple"
-                    android:clickable="true"
-                    android:focusable="true"
+                    android:padding="16dp"
                     android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp">
+                    android:orientation="horizontal">
 
-                    <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
-                        android:contentDescription="Logout"
-                        android:src="@android:drawable/ic_lock_power_off"
-                        app:tint="#D32F2F" />
+                    <TextView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:text="🚪"/>
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="16dp"
                         android:layout_weight="1"
+                        android:layout_marginStart="14dp"
                         android:text="Logout"
-                        android:textColor="#D32F2F"
-                        android:textSize="15sp" />
-
+                        android:textColor="@color/danger"
+                        android:textStyle="bold"
+                        android:textSize="15sp"/>
                 </LinearLayout>
 
             </LinearLayout>
 
         </androidx.cardview.widget.CardView>
 
-        <!-- App version footer -->
+        <!-- FOOTER -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
             android:gravity="center"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="24dp"
             android:text="MediNear v1.0.0"
-            android:textColor="#B0B0B0"
-            android:textSize="11sp" />
+            android:textColor="@color/text_secondary"
+            android:textSize="11sp"/>
 
     </LinearLayout>
 
