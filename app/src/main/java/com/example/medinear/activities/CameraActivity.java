@@ -4,6 +4,10 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -14,6 +18,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.CameraSelector;
@@ -24,11 +29,14 @@ import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+
 import com.example.medinear.R;
 import com.example.medinear.models.Medicine;
+import com.example.medinear.utils.ImageStorageHelper; // ← ADD THIS IMPORT
 import com.example.medinear.utils.LocalStorageHelper;
 import com.example.medinear.utils.NotificationHelper;
 import com.google.common.util.concurrent.ListenableFuture;
+
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -36,10 +44,6 @@ import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Typeface;
 
 public class CameraActivity extends AppCompatActivity {
 
@@ -54,6 +58,7 @@ public class CameraActivity extends AppCompatActivity {
     private ProgressBar progressBar;
 
     private LocalStorageHelper storageHelper;
+    private ImageStorageHelper imageStorageHelper; // ← ADD THIS
     private Bitmap capturedBitmap;
     private boolean isPhotoCaptured = false;
     private static final int CAMERA_PERMISSION_CODE = 100;
@@ -64,6 +69,7 @@ public class CameraActivity extends AppCompatActivity {
         setContentView(R.layout.activity_camera);
 
         storageHelper = new LocalStorageHelper(this);
+        imageStorageHelper = new ImageStorageHelper(this); // ← INITIALIZE
         cameraExecutor = Executors.newSingleThreadExecutor();
 
         initViews();
@@ -75,7 +81,6 @@ public class CameraActivity extends AppCompatActivity {
     }
 
     private Bitmap addTimestampToImage(Bitmap bitmap) {
-
         Bitmap mutableBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
         Canvas canvas = new Canvas(mutableBitmap);
 
@@ -116,6 +121,7 @@ public class CameraActivity extends AppCompatActivity {
 
         return mutableBitmap;
     }
+
     private void initViews() {
         previewView = findViewById(R.id.previewView);
         ivCapturedPhoto = findViewById(R.id.ivCapturedPhoto);
@@ -212,7 +218,7 @@ public class CameraActivity extends AppCompatActivity {
                                 capturedBitmap = MediaStore.Images.Media.getBitmap(
                                         getContentResolver(), imageUri);
 
-// Add timestamp to the image
+                                // Add timestamp to the image
                                 capturedBitmap = addTimestampToImage(capturedBitmap);
 
                                 showCapturedPhoto();
@@ -280,7 +286,11 @@ public class CameraActivity extends AppCompatActivity {
         btnSave.setEnabled(false);
         btnSave.setText("Saving...");
 
-        String imagePath = storageHelper.saveImage(capturedBitmap);
+        // ============================================================
+        // FIXED: Use imageStorageHelper instead of storageHelper
+        // ============================================================
+        String imagePath = imageStorageHelper.saveImage(capturedBitmap);
+
         if (imagePath == null) {
             Toast.makeText(this, "Failed to save image", Toast.LENGTH_SHORT).show();
             progressBar.setVisibility(View.GONE);

@@ -45,7 +45,7 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyDr64tr-Y3YopYDi7PmbUou96Q0o3wSYlI" />
 
-        <!-- ================= SPLASH ================= -->
+        <!-- ================= SPLASH (LAUNCHER) ================= -->
         <activity
             android:name=".activities.SplashActivity"
             android:exported="true"
@@ -110,7 +110,6 @@
             android:screenOrientation="portrait" />
 
         <!-- ================= FIREBASE MESSAGING SERVICE ================= -->
-        <!-- ✅ Only ONE service entry needed -->
         <service
             android:name=".utils.MyFirebaseMessagingService"
             android:exported="false">
@@ -129,6 +128,9 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <!-- ================= OPTIONAL: MAIN ACTIVITY (NOT LAUNCHER) ================= -->
+        <!-- You can keep this or delete it -->
 
     </application>
 

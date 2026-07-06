@@ -1,5 +1,6 @@
 package com.example.medinear.adapters;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -7,92 +8,120 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.medinear.R;
 import com.example.medinear.models.Medicine;
+import com.example.medinear.utils.ImageStorageHelper;
 import com.example.medinear.utils.LocalStorageHelper;
+
 import java.util.List;
 
 public class FavouriteAdapter extends RecyclerView.Adapter<FavouriteAdapter.ViewHolder> {
 
-    private List<Medicine> medicines;
+    private Context context;
+    private List<Medicine> medicineList;
     private LocalStorageHelper storageHelper;
-    private OnItemDeleteListener deleteListener;
+    private ImageStorageHelper imageStorageHelper;
+    private OnItemClickListener onItemClickListener;
+    private OnDeleteClickListener onDeleteClickListener;
 
-    public interface OnItemDeleteListener {
-        void onDelete(Medicine medicine, int position);
+    public interface OnItemClickListener {
+        void onItemClick(Medicine medicine);
     }
 
-    public FavouriteAdapter(List<Medicine> medicines) {
-        this.medicines = medicines;
+    public interface OnDeleteClickListener {
+        void onDeleteClick(Medicine medicine);
     }
 
-    public void setOnItemDeleteListener(OnItemDeleteListener listener) {
-        this.deleteListener = listener;
+    public FavouriteAdapter(Context context, List<Medicine> medicineList) {
+        this.context = context;
+        this.medicineList = medicineList;
+        this.storageHelper = new LocalStorageHelper(context);
+        this.imageStorageHelper = new ImageStorageHelper(context);
     }
 
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_favourite, parent, false);
-        storageHelper = new LocalStorageHelper(parent.getContext());
+        View view = LayoutInflater.from(context).inflate(R.layout.item_favourite, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Medicine medicine = medicines.get(position);
+        Medicine medicine = medicineList.get(position);
 
         holder.tvName.setText(medicine.getName());
-        holder.tvNotes.setText(medicine.getNotes() != null && !medicine.getNotes().isEmpty()
-                ? medicine.getNotes() : "No notes");
-        holder.tvTime.setText(medicine.getTimestamp() != null ? medicine.getTimestamp() : "");
+        holder.tvTimestamp.setText(medicine.getTimestamp());
 
+        if (medicine.getNotes() != null && !medicine.getNotes().isEmpty()) {
+            holder.tvNotes.setText(medicine.getNotes());
+            holder.tvNotes.setVisibility(View.VISIBLE);
+        } else {
+            holder.tvNotes.setVisibility(View.GONE);
+        }
+
+        // Load image
         if (medicine.getImagePath() != null && !medicine.getImagePath().isEmpty()) {
-            Bitmap bitmap = storageHelper.loadImage(medicine.getImagePath());
+            Bitmap bitmap = imageStorageHelper.loadImage(medicine.getImagePath());
             if (bitmap != null) {
                 holder.ivImage.setImageBitmap(bitmap);
             } else {
-                holder.ivImage.setImageResource(R.drawable.ic_launcher_foreground);
+                holder.ivImage.setImageResource(android.R.drawable.ic_menu_gallery);
             }
         } else {
-            holder.ivImage.setImageResource(R.drawable.ic_launcher_foreground);
+            holder.ivImage.setImageResource(android.R.drawable.ic_menu_gallery);
         }
 
+        // Item click
+        holder.itemView.setOnClickListener(v -> {
+            if (onItemClickListener != null) {
+                onItemClickListener.onItemClick(medicine);
+            }
+        });
+
+        // Delete button click
         holder.btnDelete.setOnClickListener(v -> {
-            int pos = holder.getAdapterPosition();
-            if (pos != RecyclerView.NO_POSITION && deleteListener != null) {
-                deleteListener.onDelete(medicine, pos);
+            if (onDeleteClickListener != null) {
+                onDeleteClickListener.onDeleteClick(medicine);
             }
         });
     }
 
     @Override
     public int getItemCount() {
-        return medicines != null ? medicines.size() : 0;
+        return medicineList != null ? medicineList.size() : 0;
     }
 
-    public void removeItem(int position) {
-        if (medicines != null && position >= 0 && position < medicines.size()) {
-            medicines.remove(position);
-            notifyItemRemoved(position);
-            notifyItemRangeChanged(position, medicines.size());
-        }
+    public void updateData(List<Medicine> newList) {
+        this.medicineList = newList;
+        notifyDataSetChanged();
     }
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.onItemClickListener = listener;
+    }
+
+    public void setOnDeleteClickListener(OnDeleteClickListener listener) {
+        this.onDeleteClickListener = listener;
+    }
+
+    // ===================== VIEWHOLDER =====================
+    public static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView ivImage;
-        TextView tvName, tvNotes, tvTime;
-        ImageButton btnDelete;
+        TextView tvName, tvTimestamp, tvNotes;
+        ImageButton btnDelete;  // ← ImageButton (matches your layout)
 
-        ViewHolder(View itemView) {
+        public ViewHolder(@NonNull View itemView) {
             super(itemView);
+            // Using YOUR IDs from item_favourite.xml
             ivImage = itemView.findViewById(R.id.ivMedicine);
             tvName = itemView.findViewById(R.id.tvMedicineName);
             tvNotes = itemView.findViewById(R.id.tvMedicineNotes);
-            tvTime = itemView.findViewById(R.id.tvMedicineTime);
+            tvTimestamp = itemView.findViewById(R.id.tvMedicineTime);
             btnDelete = itemView.findViewById(R.id.btnDelete);
         }
     }

@@ -10,6 +10,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.medinear.R;
 import com.example.medinear.models.Medicine;
+import com.example.medinear.utils.ImageStorageHelper;
 import com.example.medinear.utils.LocalStorageHelper;
 
 import java.util.List;
@@ -43,7 +44,8 @@ public class ImageViewActivity extends AppCompatActivity {
             return;
         }
 
-        Bitmap bitmap = storageHelper.loadImage(imagePath);
+        ImageStorageHelper imageStorageHelper = new ImageStorageHelper(this);
+        Bitmap bitmap = imageStorageHelper.loadImage(imagePath);
         if (bitmap != null) {
             fullImageView.setImageBitmap(bitmap);
         } else {

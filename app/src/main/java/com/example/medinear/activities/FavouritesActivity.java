@@ -47,7 +47,7 @@ public class FavouritesActivity extends AppCompatActivity {
                 "All saved pharmacies will be removed. This action cannot be undone.",
                 "Clear All",
                 () -> {
-                    storageHelper.clearFavouritePharmacies();
+                    storageHelper.clearFavourites();
                     loadFavourites();
                     Toast.makeText(this, "All favourites cleared", Toast.LENGTH_SHORT).show();
                 }

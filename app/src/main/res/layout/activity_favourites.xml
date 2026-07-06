@@ -4,15 +4,17 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/background_light"
+    android:background="@color/bg_screen"
     android:padding="16dp">
 
+    <!-- Header Card -->
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         app:cardCornerRadius="12dp"
-        app:cardElevation="4dp">
+        app:cardElevation="4dp"
+        app:cardBackgroundColor="@color/surface_card">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -28,7 +30,7 @@
                 android:text="⭐ Favourite Pharmacies"
                 android:textSize="20sp"
                 android:textStyle="bold"
-                android:textColor="@color/primary_color" />
+                android:textColor="@color/brand_primary" />
 
             <TextView
                 android:id="@+id/tvCount"
@@ -36,33 +38,37 @@
                 android:layout_height="wrap_content"
                 android:text="0 items"
                 android:textSize="14sp"
-                android:textColor="@android:color/darker_gray"
+                android:textColor="@color/text_secondary"
                 android:layout_marginEnd="12dp" />
 
             <Button
                 android:id="@+id/btnClearAll"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Clear"
+                android:text="Clear All"
                 android:backgroundTint="@color/red"
                 android:textColor="@android:color/white"
                 android:minWidth="60dp"
                 android:paddingStart="12dp"
                 android:paddingEnd="12dp"
+                android:textSize="12sp"
                 android:visibility="gone" />
 
         </LinearLayout>
 
     </androidx.cardview.widget.CardView>
 
+    <!-- RecyclerView -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewPharmacies"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:clipToPadding="false"
-        android:paddingBottom="8dp" />
+        android:paddingBottom="8dp"
+        android:visibility="visible" />
 
+    <!-- Empty State -->
     <LinearLayout
         android:id="@+id/emptyState"
         android:layout_width="match_parent"
@@ -73,11 +79,11 @@
         android:visibility="gone">
 
         <ImageView
-            android:layout_width="100dp"
-            android:layout_height="100dp"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
             android:src="@drawable/ic_launcher_foreground"
             android:contentDescription="Empty"
-            android:alpha="0.5" />
+            android:alpha="0.3" />
 
         <TextView
             android:id="@+id/tvEmpty"
@@ -86,7 +92,7 @@
             android:text="No Favourite Pharmacies"
             android:textSize="20sp"
             android:textStyle="bold"
-            android:textColor="@android:color/darker_gray"
+            android:textColor="@color/text_primary"
             android:layout_marginTop="16dp" />
 
         <TextView
@@ -94,7 +100,7 @@
             android:layout_height="wrap_content"
             android:text="Save pharmacies from Nearby Search\nto see them here"
             android:textSize="14sp"
-            android:textColor="@android:color/darker_gray"
+            android:textColor="@color/text_secondary"
             android:gravity="center"
             android:layout_marginTop="8dp" />
 
@@ -102,10 +108,12 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Find Pharmacies"
-            android:backgroundTint="@color/primary_color"
+            android:backgroundTint="@color/brand_primary"
             android:textColor="@android:color/white"
             android:layout_marginTop="24dp"
-            android:onClick="goToNearbyPharmacy" />
+            android:onClick="goToNearbyPharmacy"
+            android:paddingStart="32dp"
+            android:paddingEnd="32dp" />
 
     </LinearLayout>
 

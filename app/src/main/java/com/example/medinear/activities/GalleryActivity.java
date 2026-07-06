@@ -79,7 +79,7 @@ public class GalleryActivity extends AppCompatActivity {
         }
 
         if (match != null) {
-            storageHelper.deleteMedicine(match); // deletes image file + removes from saved list
+            storageHelper.removeMedicine(match.getName()); // removes from saved list by name
             Toast.makeText(this, "Image deleted", Toast.LENGTH_SHORT).show();
         } else {
             Toast.makeText(this, "Could not find matching entry", Toast.LENGTH_SHORT).show();

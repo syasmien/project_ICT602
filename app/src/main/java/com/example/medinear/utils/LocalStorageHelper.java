@@ -2,203 +2,203 @@ package com.example.medinear.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.os.Environment;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+
 import com.example.medinear.models.Medicine;
 import com.example.medinear.models.Pharmacy;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
 import java.lang.reflect.Type;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 public class LocalStorageHelper {
 
-    private Context context;
-    private SharedPreferences prefs;
-    private Gson gson;
-    private static final String PREF_PREFIX = "MediNearData_"; // CHANGED - now a prefix, not the full name
-    private static final String KEY_MEDICINES = "medicines";
-    private static final String KEY_PHARMACIES = "favourite_pharmacies";
+    private static final String PREF_NAME = "MediNearPrefs";
+    private static final String FCM_PREF_NAME = "FCM";
+    private static final String KEY_FAVOURITES = "favourites";
+    private static final String KEY_FCM_TOKEN = "fcm_token";
+    private static final String KEY_MEDICINES = "medicines"; // ← ADD THIS
+
+    private final SharedPreferences prefs;
+    private final SharedPreferences fcmPrefs;
+    private final Gson gson;
 
     public LocalStorageHelper(Context context) {
-        this.context = context;
-
-        // NEW - scope storage per logged-in user instead of one shared file for the whole device
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        String uid = (currentUser != null) ? currentUser.getUid() : "guest";
-
-        this.prefs = context.getSharedPreferences(PREF_PREFIX + uid, Context.MODE_PRIVATE);
+        this.prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        this.fcmPrefs = context.getSharedPreferences(FCM_PREF_NAME, Context.MODE_PRIVATE);
         this.gson = new Gson();
     }
 
-    // ============ IMAGE METHODS ============
+    // ================ FCM TOKEN METHODS ================
 
-    public String saveImage(Bitmap bitmap) {
-        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
-        String fileName = "MED_" + timestamp + ".jpg";
-
-        File storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        if (storageDir == null) {
-            storageDir = context.getFilesDir();
-        }
-
-        if (!storageDir.exists()) {
-            storageDir.mkdirs();
-        }
-
-        File imageFile = new File(storageDir, fileName);
-
-        try {
-            FileOutputStream fos = new FileOutputStream(imageFile);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
-            fos.close();
-            return imageFile.getAbsolutePath();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
+    public void saveFcmToken(String token) {
+        fcmPrefs.edit().putString(KEY_FCM_TOKEN, token).apply();
     }
 
-    public Bitmap loadImage(String path) {
-        if (path == null || path.isEmpty()) return null;
-        File file = new File(path);
-        if (file.exists()) {
-            return BitmapFactory.decodeFile(path);
-        }
-        return null;
+    public String getFcmToken() {
+        return fcmPrefs.getString(KEY_FCM_TOKEN, null);
     }
 
-    public boolean deleteImage(String path) {
-        if (path == null || path.isEmpty()) return false;
-        File file = new File(path);
-        return file.exists() && file.delete();
+    public boolean hasFcmToken() {
+        return fcmPrefs.contains(KEY_FCM_TOKEN);
     }
 
-    public List<String> getAllImagePaths() {
-        List<String> paths = new ArrayList<>();
-        File storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        if (storageDir != null && storageDir.exists()) {
-            File[] files = storageDir.listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    if (file.getName().endsWith(".jpg") || file.getName().endsWith(".png")) {
-                        paths.add(file.getAbsolutePath());
-                    }
-                }
-            }
-        }
-        return paths;
+    public void clearFcmToken() {
+        fcmPrefs.edit().remove(KEY_FCM_TOKEN).apply();
     }
 
-    // ============ MEDICINE METHODS ============
+    // ================ MEDICINE METHODS ================
 
-    public void saveMedicines(List<Medicine> medicines) {
-        String json = gson.toJson(medicines);
-        prefs.edit().putString(KEY_MEDICINES, json).apply();
-    }
-
-    public List<Medicine> getMedicines() {
-        String json = prefs.getString(KEY_MEDICINES, "");
-        if (json.isEmpty()) {
-            return new ArrayList<>();
-        }
-        Type type = new TypeToken<List<Medicine>>(){}.getType();
-        List<Medicine> medicines = gson.fromJson(json, type);
-        return medicines != null ? medicines : new ArrayList<>();
-    }
-
+    /**
+     * Add a medicine to the list
+     */
     public void addMedicine(Medicine medicine) {
         List<Medicine> medicines = getMedicines();
+
+        // Check if already exists (by name and timestamp)
+        for (Medicine m : medicines) {
+            if (m.getName().equals(medicine.getName()) &&
+                    m.getTimestamp().equals(medicine.getTimestamp())) {
+                return; // Already exists
+            }
+        }
+
         medicines.add(medicine);
         saveMedicines(medicines);
     }
 
-    public void deleteMedicine(Medicine medicine) {
+    /**
+     * Get all medicines
+     */
+    public List<Medicine> getMedicines() {
+        String json = prefs.getString(KEY_MEDICINES, "[]");
+        Type type = new TypeToken<List<Medicine>>() {}.getType();
+        List<Medicine> medicines = gson.fromJson(json, type);
+        return medicines != null ? medicines : new ArrayList<>();
+    }
+
+    /**
+     * Get a specific medicine by name
+     */
+    public Medicine getMedicineByName(String name) {
         List<Medicine> medicines = getMedicines();
-        if (medicine.getImagePath() != null) {
-            deleteImage(medicine.getImagePath());
+        for (Medicine medicine : medicines) {
+            if (medicine.getName().equalsIgnoreCase(name)) {
+                return medicine;
+            }
         }
-        medicines.remove(medicine);
-        saveMedicines(medicines);
+        return null;
     }
 
-    public void deleteMedicineByName(String name) {
+    /**
+     * Get medicine by index
+     */
+    public Medicine getMedicineAt(int index) {
         List<Medicine> medicines = getMedicines();
-        medicines.removeIf(m -> m.getName().equalsIgnoreCase(name));
-        saveMedicines(medicines);
-    }
-
-    // ============ PHARMACY FAVOURITE METHODS ============
-
-    public void saveFavouritePharmacies(List<Pharmacy> pharmacies) {
-        String json = gson.toJson(pharmacies);
-        prefs.edit().putString(KEY_PHARMACIES, json).apply();
-    }
-
-    public void clearFavouritePharmacies() {
-        prefs.edit().remove(KEY_PHARMACIES).apply();
-    }
-
-    public List<Pharmacy> getFavouritePharmacies() {
-        String json = prefs.getString(KEY_PHARMACIES, "");
-        if (json.isEmpty()) {
-            return new ArrayList<>();
+        if (index >= 0 && index < medicines.size()) {
+            return medicines.get(index);
         }
-        Type type = new TypeToken<List<Pharmacy>>(){}.getType();
-        List<Pharmacy> pharmacies = gson.fromJson(json, type);
-        return pharmacies != null ? pharmacies : new ArrayList<>();
+        return null;
     }
 
-    public boolean isFavouritePharmacy(String pharmacyId) {
-        if (pharmacyId == null) return false;
-        for (Pharmacy p : getFavouritePharmacies()) {
-            if (pharmacyId.equals(p.getId())) return true;
+    /**
+     * Get count of medicines
+     */
+    public int getMedicineCount() {
+        return getMedicines().size();
+    }
+
+    /**
+     * Remove a medicine
+     */
+    public boolean removeMedicine(String medicineName) {
+        List<Medicine> medicines = getMedicines();
+        boolean removed = medicines.removeIf(m -> m.getName().equalsIgnoreCase(medicineName));
+        if (removed) {
+            saveMedicines(medicines);
+        }
+        return removed;
+    }
+
+    /**
+     * Remove a medicine by index
+     */
+    public boolean removeMedicineAt(int index) {
+        List<Medicine> medicines = getMedicines();
+        if (index >= 0 && index < medicines.size()) {
+            medicines.remove(index);
+            saveMedicines(medicines);
+            return true;
         }
         return false;
     }
 
+    /**
+     * Clear all medicines
+     */
+    public void clearMedicines() {
+        prefs.edit().remove(KEY_MEDICINES).apply();
+    }
+
+    /**
+     * Save medicines list to SharedPreferences
+     */
+    private void saveMedicines(List<Medicine> medicines) {
+        String json = gson.toJson(medicines);
+        prefs.edit().putString(KEY_MEDICINES, json).apply();
+    }
+
+    // ================ FAVOURITES METHODS ================
+
     public void addFavouritePharmacy(Pharmacy pharmacy) {
-        List<Pharmacy> pharmacies = getFavouritePharmacies();
-        for (Pharmacy p : pharmacies) {
+        List<Pharmacy> favourites = getFavouritePharmacies();
+
+        for (Pharmacy p : favourites) {
             if (p.getId() != null && p.getId().equals(pharmacy.getId())) {
                 return;
             }
         }
-        pharmacies.add(pharmacy);
-        saveFavouritePharmacies(pharmacies);
+
+        favourites.add(pharmacy);
+        saveFavourites(favourites);
     }
 
     public void removeFavouritePharmacy(String pharmacyId) {
-        List<Pharmacy> pharmacies = getFavouritePharmacies();
-        pharmacies.removeIf(p -> pharmacyId != null && pharmacyId.equals(p.getId()));
-        saveFavouritePharmacies(pharmacies);
+        List<Pharmacy> favourites = getFavouritePharmacies();
+        favourites.removeIf(p -> p.getId() != null && p.getId().equals(pharmacyId));
+        saveFavourites(favourites);
     }
 
-    public boolean toggleFavouritePharmacy(Pharmacy pharmacy) {
-        if (isFavouritePharmacy(pharmacy.getId())) {
-            removeFavouritePharmacy(pharmacy.getId());
-            return false;
-        } else {
-            addFavouritePharmacy(pharmacy);
-            return true;
-        }
+    public List<Pharmacy> getFavouritePharmacies() {
+        String json = prefs.getString(KEY_FAVOURITES, "[]");
+        Type type = new TypeToken<List<Pharmacy>>() {}.getType();
+        List<Pharmacy> favourites = gson.fromJson(json, type);
+        return favourites != null ? favourites : new ArrayList<>();
     }
 
-    public void clearAllData() {
-        List<String> imagePaths = getAllImagePaths();
-        for (String path : imagePaths) {
-            deleteImage(path);
+    public boolean isFavouritePharmacy(String pharmacyId) {
+        if (pharmacyId == null) return false;
+        List<Pharmacy> favourites = getFavouritePharmacies();
+        for (Pharmacy p : favourites) {
+            if (p.getId() != null && p.getId().equals(pharmacyId)) {
+                return true;
+            }
         }
+        return false;
+    }
+
+    private void saveFavourites(List<Pharmacy> favourites) {
+        String json = gson.toJson(favourites);
+        prefs.edit().putString(KEY_FAVOURITES, json).apply();
+    }
+
+    public void clearFavourites() {
+        prefs.edit().remove(KEY_FAVOURITES).apply();
+    }
+
+    public void clearAll() {
         prefs.edit().clear().apply();
+        fcmPrefs.edit().clear().apply();
     }
 }
