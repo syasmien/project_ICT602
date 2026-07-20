@@ -46,7 +46,6 @@ import java.util.Map;
 public class NearbyPharmacyActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
-    private static final String PLACES_API_KEY = "AIzaSyDr64tr-Y3YopYDi7PmbUou96Q0o3wSYlI";
     private static final int SEARCH_RADIUS_METERS = 3000;
 
     private GoogleMap googleMap;
